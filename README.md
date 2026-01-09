@@ -81,15 +81,51 @@ python -m unittest discover tests/unit
 
 ---
 
-## 👥 Contributors
+## 👥 Team Members
 
-<table>
-  <tr>
-    <td align="center">
-      <b>SE342 Team</b>
-    </td>
-  </tr>
-</table>
+| Name | Role | Responsibilities |
+|:-----|:-----|:-----------------|
+| 👩‍💻 **Ceren Yaşar** | Project Lead / Documentation | Jira project management, Sprint planning, Technical Documentation |
+| 👨‍💻 **Mehmet Şenadlı** | Backend / Database Design | Database architecture, Schema design, Data management |
+| 👨‍🎨 **Bilal Çifteci** | Frontend & Analyst | UI Design, Prototyping, Creating UML Diagrams |
+
+---
+
+## 📅 Sprint Planning & Epic Roadmap
+
+Development follows **Agile/Scrum methodology** structured into **4 main sprints**, each aligned with a corresponding **JIRA Epic**.
+
+<details>
+<summary><b>🔹 Sprint 1: Infrastructure & Analysis (Epic 1)</b></summary>
+
+- **Focus:** System foundation and requirement analysis  
+- **Key Tasks:** Defining functional/non-functional requirements, business rules, and core diagrams (Use Case, ERD, Sequence)  
+- **Goal:** Initializing the repository with the required project structure
+</details>
+
+<details>
+<summary><b>🔹 Sprint 2: Core Development & Database (Epic 2)</b></summary>
+
+- **Focus:** Core system implementation and data modeling  
+- **Key Tasks:** PostgreSQL schema setup, dummy data import, exam, room, and seating plan modules  
+- **Goal:** Enforcing role-based access for Admin and Proctor roles
+</details>
+
+<details>
+<summary><b>🔹 Sprint 3: Check-in Workflow & ML Integration (Epic 3)</b></summary>
+
+- **Focus:** Check-in process and ML-based identity verification  
+- **Key Tasks:** ML service wrapper implementation and automated seating compliance checks  
+- **Goal:** Recording check-in results, timestamps, and violation triggers
+</details>
+
+<details>
+<summary><b>🔹 Sprint 4: Reporting, Testing & Validation (Epic 4)</b></summary>
+
+- **Focus:** System validation and documentation completion  
+- **Key Tasks:** Test case creation (functional, negative, edge cases) and unit tests for seating and ML mocks  
+- **Goal:** Generating analytical reports for check-ins, mismatches, and violations
+</details>
 
 ---
 
