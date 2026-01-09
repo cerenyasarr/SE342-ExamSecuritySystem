@@ -6,13 +6,13 @@ A comprehensive Exam Security System featuring face recognition check-in, automa
 - `analysis/`: System requirements and business rules.
 - `diagrams/`: UML diagrams (Use Case, ERD, Sequence, Activity).
 - `database/`: SQL schema and dummy data.
-- `src/`: Source code for the application core.
+- `backend/`: Source code for the application core (API & Logic).
   - `auth/`: RBAC logic.
   - `checkin/`: Face recognition workflow.
   - `management/`: Exam and room administration.
   - `ml_wrapper/`: Interface for ML models.
   - `violations/`: Reporting logic.
-- `tests/`: Unit and integration tests.
+- `frontend/`: Static HTML/CSS/JS interface.
 - `test-docs/`: Detailed test scenarios.
 
 ## Setup Instructions
