@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Log Violation - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container" style="max-width: 600px;">
+        <a href="../dashboard.html" style="color: var(--text-dim); text-decoration: none;">← Back to Dashboard</a>
+        <h1 style="margin-top: 1rem; color: var(--danger);">Log Violation</h1>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <form>
+                <div class="input-group">
+                    <label>Student ID / Name</label>
+                    <input type="text" class="input-control" placeholder="Search student...">
+                </div>
+
+                <div class="input-group">
+                    <label>Violation Type</label>
+                    <select class="input-control">
+                        <option>Identity Mismatch</option>
+                        <option>Wrong Seat</option>
+                        <option>Unauthorized Object</option>
+                        <option>Disruptive Behavior</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea class="input-control" rows="4" placeholder="Describe the incident details..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Evidence (Optional)</label>
+                    <div
+                        style="padding: 2rem; border: 2px dashed var(--text-dim); border-radius: 0.5rem; text-align: center; cursor: pointer;">
+                        📸 Upload Photo or Screenshot
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-danger" style="flex: 1;">Submit Report</button>
+                    <button type="button" class="btn"
+                        style="background: rgba(255,255,255,0.1); color: white;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

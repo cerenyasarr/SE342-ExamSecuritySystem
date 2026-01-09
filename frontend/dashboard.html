@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Exam Security System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="glass-card"
+        style="border-radius: 0; display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;">
+        <h3>ESS Dashboard</h3>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span id="username-display">User</span>
+            <button onclick="App.logout()" class="btn btn-danger"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Welcome Back</h1>
+        <p style="color: var(--text-dim)">Select a module to continue.</p>
+
+        <div class="dashboard-grid">
+            <!-- Admin Modules -->
+            <div class="glass-card admin-only">
+                <div class="feature-icon">📝</div>
+                <h3>Exam Management</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">Create exams, define rooms, and schedule sessions.
+                </p>
+                <a href="admin/exams.html" class="btn btn-primary">Manage Exams</a>
+            </div>
+
+            <div class="glass-card admin-only">
+                <div class="feature-icon">👥</div>
+                <h3>Student Rosters</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">Import student lists and manage course enrollments.
+                </p>
+                <a href="admin/students.html" class="btn btn-primary">Import Data</a>
+            </div>
+
+            <div class="glass-card admin-only">
+                <div class="feature-icon">🪑</div>
+                <h3>Seating Plans</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">Design room layouts and assign seats automatically.
+                </p>
+                <a href="admin/seating.html" class="btn btn-primary">Edit Plans</a>
+            </div>
+
+            <!-- Proctor Modules -->
+            <div class="glass-card proctor-only">
+                <div class="feature-icon">📸</div>
+                <h3>Start Check-in</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">Process student entry with Face Verification.</p>
+                <a href="proctor/checkin.html" class="btn btn-primary">Launch Kiosk</a>
+            </div>
+
+            <div class="glass-card proctor-only">
+                <div class="feature-icon">⚠️</div>
+                <h3>Direct Violation Log</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">Manually report an incident or mismatch.</p>
+                <a href="proctor/violation.html" class="btn btn-primary">Report Issue</a>
+            </div>
+
+            <!-- Common Modules -->
+            <div class="glass-card">
+                <div class="feature-icon">📊</div>
+                <h3>Reports & Analytics</h3>
+                <p style="color: var(--text-dim); margin: 1rem 0;">View attendance stats and violation logs.</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="reports/status.html" class="btn btn-primary"
+                        style="flex: 1; text-align: center;">Status</a>
+                    <a href="reports/violations.html" class="btn btn-primary"
+                        style="flex: 1; text-align: center;">Violations</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>App.checkAuth();</script>
+</body>
+
+</html>

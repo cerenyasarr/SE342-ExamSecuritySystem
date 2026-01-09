@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Seating Plan - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .seating-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .seat {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+
+        .seat:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .seat.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.2);
+        }
+
+        .seat.blocked {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--text-dim);
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" style="color: var(--text-dim); text-decoration: none;">← Back to Dashboard</a>
+        <h1 style="margin-top: 1rem;">Seating Plan Editor</h1>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Room: Lecture Hall A</h3>
+                <div>
+                    <button class="btn btn-primary" style="font-size: 0.9rem;">Auto-Assign</button>
+                    <button class="btn btn-primary" style="font-size: 0.9rem; background: var(--success);">Save
+                        Layout</button>
+                </div>
+            </div>
+
+            <div class="seating-grid">
+                <!-- Mock Seats -->
+                <div class="seat selected">A1<br><small style="color: var(--success)">Assigned</small></div>
+                <div class="seat">A2<br><small>Empty</small></div>
+                <div class="seat blocked">A3<br><small>Broken</small></div>
+                <div class="seat">A4<br><small>Empty</small></div>
+                <div class="seat">A5<br><small>Empty</small></div>
+
+                <div class="seat">B1<br><small>Empty</small></div>
+                <div class="seat selected">B2<br><small style="color: var(--success)">Assigned</small></div>
+                <div class="seat">B3<br><small>Empty</small></div>
+                <div class="seat">B4<br><small>Empty</small></div>
+                <div class="seat">B5<br><small>Empty</small></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

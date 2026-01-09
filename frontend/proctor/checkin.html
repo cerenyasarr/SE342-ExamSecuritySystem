@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Check-in Kiosk - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .camera-box {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--text-dim);
+            color: var(--text-dim);
+        }
+
+        .ml-panel {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .loading {
+            color: var(--primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="max-width: 800px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Exam Check-in</h1>
+            <a href="../dashboard.html" class="btn btn-danger" style="padding: 0.5rem;">Exit Kiosk</a>
+        </div>
+
+        <div class="glass-card">
+            <div style="margin-bottom: 1.5rem;">
+                <h3>Step 1: Select Student</h3>
+                <input type="text" class="input-control" placeholder="Search by Name or ID..."
+                    style="margin-top: 0.5rem;">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3>Step 2: Identity Verification</h3>
+                <div class="camera-box">
+                    [Live Camera Feed Placeholder]
+                </div>
+                <button onclick="App.verifyIdentity()" class="btn btn-primary"
+                    style="width: 100%; margin-top: 1rem;">Capture & Verify</button>
+
+                <div id="ml-result" class="ml-panel">
+                    <p id="status-text">Waiting...</p>
+                </div>
+            </div>
+
+            <div>
+                <h3>Step 3: Seat Assignment</h3>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                    <div
+                        style="flex: 1; padding: 1rem; background: rgba(79, 70, 229, 0.1); border-radius: 0.5rem; border: 1px solid var(--primary);">
+                        <span style="display: block; font-size: 0.8rem; color: var(--text-dim);">Assigned Seat</span>
+                        <strong style="font-size: 1.5rem;">A1</strong>
+                    </div>
+                    <button class="btn btn-primary" style="background: var(--success); flex: 2;">Confirm
+                        Check-in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/app.js"></script>
+</body>
+
+</html>

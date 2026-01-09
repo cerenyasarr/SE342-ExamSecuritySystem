@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Status - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" style="color: var(--text-dim); text-decoration: none;">← Back to Dashboard</a>
+        <h1 style="margin-top: 1rem;">Exam Status Report</h1>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 2rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; font-weight: bold; color: var(--primary);">45</div>
+                    <div style="color: var(--text-dim);">Total Checked-in</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; font-weight: bold; color: var(--text-light);">5</div>
+                    <div style="color: var(--text-dim);">Pending</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; font-weight: bold; color: var(--success);">98%</div>
+                    <div style="color: var(--text-dim);">Attendance Rate</div>
+                </div>
+            </div>
+
+            <h3>Live Feed</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; color: var(--text-light);">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <th style="padding: 1rem;">Time</th>
+                        <th style="padding: 1rem;">Student</th>
+                        <th style="padding: 1rem;">Seat</th>
+                        <th style="padding: 1rem;">Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">10:05 AM</td>
+                        <td style="padding: 1rem;">John Doe</td>
+                        <td style="padding: 1rem;">A1</td>
+                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">10:02 AM</td>
+                        <td style="padding: 1rem;">Jane Smith</td>
+                        <td style="padding: 1rem;">B3</td>
+                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">10:00 AM</td>
+                        <td style="padding: 1rem;">Mark Lee</td>
+                        <td style="padding: 1rem;">-</td>
+                        <td style="padding: 1rem;"><span style="color: var(--danger);">Failed (Mismatch)</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

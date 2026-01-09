@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Exams - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" style="color: var(--text-dim); text-decoration: none;">← Back to Dashboard</a>
+        <h1 style="margin-top: 1rem;">Exam & Room Definitions</h1>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <h2>Create New Exam</h2>
+            <form style="margin-top: 1.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Exam Name</label>
+                        <input type="text" class="input-control" placeholder="e.g. SE342 Midterm">
+                    </div>
+                    <div class="input-group">
+                        <label>Course Code</label>
+                        <input type="text" class="input-control" placeholder="e.g. SE342">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" class="input-control">
+                    </div>
+                    <div class="input-group">
+                        <label>Start Time</label>
+                        <input type="time" class="input-control">
+                    </div>
+                    <div class="input-group">
+                        <label>Duration (mins)</label>
+                        <input type="number" class="input-control" value="120">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Select Room</label>
+                    <select class="input-control">
+                        <option>Lecture Hall A (Cap: 50)</option>
+                        <option>Lab 101 (Cap: 30)</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn btn-primary">Save Exam Definition</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
