@@ -32,6 +32,15 @@
             color: var(--primary);
             font-weight: bold;
         }
+        
+        .student-result {
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
     </style>
 </head>
 
@@ -43,12 +52,29 @@
         </div>
 
         <div class="glass-card">
+            <!-- Step 0: Select Exam -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3>Select Exam</h3>
+                <select id="exam-select" class="input-control" style="margin-top: 0.5rem;">
+                    <option value="">Loading exams...</option>
+                </select>
+            </div>
+            
+            <!-- Step 1: Search Student -->
             <div style="margin-bottom: 1.5rem;">
                 <h3>Step 1: Select Student</h3>
-                <input type="text" class="input-control" placeholder="Search by Name or ID..."
-                    style="margin-top: 0.5rem;">
+                <input type="text" id="student-search" class="input-control" placeholder="Search by Name or ID..."
+                    style="margin-top: 0.5rem;" oninput="searchStudent(this.value)">
+                <div id="student-results" style="max-height: 200px; overflow-y: auto; margin-top: 0.5rem;">
+                    <!-- Search results -->
+                </div>
+                <div id="selected-student" class="student-result">
+                    <strong id="selected-name">-</strong>
+                    <span id="selected-id" style="color: var(--text-dim); margin-left: 1rem;">-</span>
+                </div>
             </div>
 
+            <!-- Step 2: Identity Verification -->
             <div style="margin-bottom: 1.5rem;">
                 <h3>Step 2: Identity Verification</h3>
                 <div class="camera-box">
@@ -62,21 +88,122 @@
                 </div>
             </div>
 
+            <!-- Step 3: Seat Assignment -->
             <div>
                 <h3>Step 3: Seat Assignment</h3>
                 <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
                     <div
                         style="flex: 1; padding: 1rem; background: rgba(79, 70, 229, 0.1); border-radius: 0.5rem; border: 1px solid var(--primary);">
                         <span style="display: block; font-size: 0.8rem; color: var(--text-dim);">Assigned Seat</span>
-                        <strong style="font-size: 1.5rem;">A1</strong>
+                        <strong id="assigned-seat" style="font-size: 1.5rem;">-</strong>
                     </div>
-                    <button class="btn btn-primary" style="background: var(--success); flex: 2;">Confirm
-                        Check-in</button>
+                    <button class="btn btn-primary" style="background: var(--success); flex: 2;" onclick="confirmCheckin()">
+                        Confirm Check-in
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+    
+    <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
+    <script>
+        let allStudents = [];
+        let selectedStudent = null;
+        let currentExamId = null;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.loadExams('exam-select', 'Active');
+            
+            // Load all students for search
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.USERS.STUDENTS);
+                allStudents = await response.json();
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+            
+            // Exam change handler
+            document.getElementById('exam-select').addEventListener('change', async (e) => {
+                currentExamId = e.target.value;
+                if (currentExamId) {
+                    // Load exam students for seat info
+                    try {
+                        const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.STUDENTS(currentExamId));
+                        const examStudents = await response.json();
+                        // Merge seat info
+                        allStudents = allStudents.map(s => {
+                            const examStudent = examStudents.find(es => es.student_id === s.id);
+                            return { ...s, seat_number: examStudent?.seat_number, student_exam_id: examStudent?.id };
+                        });
+                    } catch (error) {
+                        console.error('Error loading exam students:', error);
+                    }
+                }
+            });
+        });
+        
+        function searchStudent(query) {
+            const resultsDiv = document.getElementById('student-results');
+            
+            if (!query || query.length < 2) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+            
+            const filtered = allStudents.filter(s => 
+                s.full_name.toLowerCase().includes(query.toLowerCase()) ||
+                s.username.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 5);
+            
+            resultsDiv.innerHTML = filtered.map(s => `
+                <div style="padding: 0.75rem; background: rgba(255,255,255,0.05); margin-bottom: 0.25rem; border-radius: 0.25rem; cursor: pointer;"
+                     onclick="selectStudent(${s.id}, '${s.full_name}', '${s.username}', '${s.seat_number || ''}')">
+                    <strong>${s.full_name}</strong>
+                    <span style="color: var(--text-dim); margin-left: 0.5rem;">${s.username}</span>
+                    ${s.seat_number ? `<span style="color: var(--success); float: right;">Seat: ${s.seat_number}</span>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function selectStudent(id, name, username, seat) {
+            selectedStudent = { id, name, username, seat };
+            
+            document.getElementById('student-results').innerHTML = '';
+            document.getElementById('student-search').value = name;
+            document.getElementById('selected-student').style.display = 'block';
+            document.getElementById('selected-name').textContent = name;
+            document.getElementById('selected-id').textContent = `ID: ${username}`;
+            document.getElementById('assigned-seat').textContent = seat || '-';
+        }
+        
+        async function confirmCheckin() {
+            if (!selectedStudent) {
+                App.showError('Please select a student first');
+                return;
+            }
+            
+            if (!currentExamId) {
+                App.showError('Please select an exam first');
+                return;
+            }
+            
+            const result = await App.processCheckin(
+                selectedStudent.id,
+                currentExamId,
+                selectedStudent.seat
+            );
+            
+            if (result && result.success) {
+                // Reset form for next student
+                selectedStudent = null;
+                document.getElementById('student-search').value = '';
+                document.getElementById('selected-student').style.display = 'none';
+                document.getElementById('assigned-seat').textContent = '-';
+                document.getElementById('ml-result').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 
 </html>
