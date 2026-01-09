@@ -5,7 +5,7 @@
 
 const API_CONFIG = {
     BASE_URL: 'http://localhost:5000',
-    
+
     ENDPOINTS: {
         // Auth endpoints
         AUTH: {
@@ -13,7 +13,7 @@ const API_CONFIG = {
             REGISTER: '/api/auth/register',
             ME: '/api/auth/me'
         },
-        
+
         // Users endpoints (students + system users)
         USERS: {
             BASE: '/api/users',
@@ -21,13 +21,25 @@ const API_CONFIG = {
             STUDENT_BY_ID: (id) => `/api/users/students/${id}`,
             BY_ID: (id) => `/api/users/${id}`
         },
-        
+
+        // Students endpoints
+        STUDENTS: {
+            BASE: '/api/students',
+            BY_ID: (id) => `/api/students/${id}`
+        },
+
+        // Courses endpoints
+        COURSES: {
+            BASE: '/api/courses',
+            BY_ID: (id) => `/api/courses/${id}`
+        },
+
         // Rooms endpoints
         ROOMS: {
             BASE: '/api/rooms',
             BY_ID: (id) => `/api/rooms/${id}`
         },
-        
+
         // Exams endpoints
         EXAMS: {
             BASE: '/api/exams',
@@ -35,7 +47,7 @@ const API_CONFIG = {
             STATUS: (id) => `/api/exams/${id}/status`,
             ENROLLMENTS: (id) => `/api/exams/${id}/enrollments`
         },
-        
+
         // Student-Exam (Enrollment) endpoints
         STUDENT_EXAMS: {
             BASE: '/api/student-exams',
@@ -44,7 +56,7 @@ const API_CONFIG = {
             EXAM_STATUS: (examId) => `/api/student-exams/exam/${examId}/status`,
             ASSIGN_SEATS: (examId) => `/api/student-exams/exam/${examId}/assign-seats`
         },
-        
+
         // Violations endpoints
         VIOLATIONS: {
             BASE: '/api/violations',
@@ -61,19 +73,19 @@ const API_CONFIG = {
  */
 async function apiRequest(endpoint, options = {}) {
     const url = API_CONFIG.BASE_URL + endpoint;
-    
+
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
         },
     };
-    
+
     // Add JWT token if available
     const token = localStorage.getItem('token');
     if (token) {
         defaultOptions.headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     const finalOptions = {
         ...defaultOptions,
         ...options,
@@ -82,7 +94,7 @@ async function apiRequest(endpoint, options = {}) {
             ...(options.headers || {})
         }
     };
-    
+
     try {
         const response = await fetch(url, finalOptions);
         return response;

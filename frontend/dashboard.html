@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
@@ -10,72 +10,108 @@
 </head>
 
 <body>
-    <nav class="glass-card"
-        style="border-radius: 0; display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;">
-        <h3>ESS Dashboard</h3>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <span id="role-display" style="background: var(--primary); padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem;"></span>
+    <nav class="top-nav">
+        <div class="logo">
+            <span class="logo-icon">📋</span>
+            <span>Exam Security System</span>
+        </div>
+        <div class="user-section">
+            <span class="role-badge" id="role-display">Admin</span>
             <span id="username-display">User</span>
             <button onclick="App.logout()" class="btn btn-danger"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+                style="padding: 0.4rem 1rem; font-size: 0.85rem;">Çıkış</button>
         </div>
     </nav>
 
     <main class="container">
-        <h1>Welcome Back</h1>
-        <p style="color: var(--text-dim)">Select a module to continue.</p>
+        <!-- Admin Panel -->
+        <div id="admin-panel">
+            <h1 class="page-title">
+                <span class="icon">👤</span>
+                Admin Paneli
+            </h1>
+            <p class="page-subtitle">Bir modül seçin.</p>
 
-        <div class="dashboard-grid">
-            <!-- Admin Modules -->
-            <div class="glass-card admin-only">
-                <div class="feature-icon">📝</div>
-                <h3>Exam Management</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">Create exams, define rooms, and schedule sessions.
-                </p>
-                <a href="admin/exams.html" class="btn btn-primary">Manage Exams</a>
+            <div class="dashboard-grid">
+                <!-- Öğrenci Kaydı -->
+                <div class="glass-card module-card">
+                    <div class="card-icon purple">📋</div>
+                    <h3>Öğrenci Kaydı</h3>
+                    <p>Yeni öğrenci kaydet ve referans fotoğrafı çek.</p>
+                    <a href="admin/student-register.html" class="btn btn-primary">Öğrenci Kaydet</a>
+                </div>
+
+                <!-- Sınav Ataması -->
+                <div class="glass-card module-card">
+                    <div class="card-icon pink">👥</div>
+                    <h3>Sınav Ataması</h3>
+                    <p>Öğrencileri sınavlara ata ve koltuk belirle.</p>
+                    <a href="admin/exam-assignment.html" class="btn btn-primary">Atama Yap</a>
+                </div>
+
+                <!-- Sınav Oluştur -->
+                <div class="glass-card module-card">
+                    <div class="card-icon purple">📝</div>
+                    <h3>Sınav Oluştur</h3>
+                    <p>Yeni sınav ekle, tarih ve salon belirle.</p>
+                    <a href="admin/exam-create.html" class="btn btn-primary">Sınav Ekle</a>
+                </div>
+
+                <!-- Salon & Koltuk Düzeni -->
+                <div class="glass-card module-card">
+                    <div class="card-icon orange">🪑</div>
+                    <h3>Salon & Koltuk Düzeni</h3>
+                    <p>Salonları oluştur, koltuk düzenini ayarla.</p>
+                    <a href="admin/room-layout.html" class="btn btn-primary">Düzen Ayarla</a>
+                </div>
+
+                <!-- Raporlar -->
+                <div class="glass-card module-card">
+                    <div class="card-icon purple">📊</div>
+                    <h3>Raporlar</h3>
+                    <p>Yoklama ve ihlal raporlarını görüntüle.</p>
+                    <div class="btn-group">
+                        <a href="reports/status.html" class="btn btn-primary">Durum</a>
+                        <a href="reports/violations.html" class="btn btn-primary">İhlaller</a>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="glass-card admin-only">
-                <div class="feature-icon">👥</div>
-                <h3>Student Rosters</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">Import student lists and manage course enrollments.
-                </p>
-                <a href="admin/students.html" class="btn btn-primary">Import Data</a>
-            </div>
+        <!-- Proctor Panel -->
+        <div id="proctor-panel" style="display: none;">
+            <h1 class="page-title">
+                <span class="icon">👁️</span>
+                Gözetmen Paneli
+            </h1>
+            <p class="page-subtitle">Bir modül seçin.</p>
 
-            <div class="glass-card admin-only">
-                <div class="feature-icon">🪑</div>
-                <h3>Seating Plans</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">Design room layouts and assign seats automatically.
-                </p>
-                <a href="admin/seating.html" class="btn btn-primary">Edit Plans</a>
-            </div>
+            <div class="dashboard-grid">
+                <!-- Check-in (Yüz Doğrulama) -->
+                <div class="glass-card module-card">
+                    <div class="card-icon purple">📷</div>
+                    <h3>Check-in (Yüz Doğrulama)</h3>
+                    <p>Sınav girişinde yüz doğrulama yap.</p>
+                    <a href="proctor/checkin.html" class="btn btn-primary">Check-in Başlat</a>
+                </div>
 
-            <!-- Proctor Modules -->
-            <div class="glass-card proctor-only">
-                <div class="feature-icon">📸</div>
-                <h3>Start Check-in</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">Process student entry with Face Verification.</p>
-                <a href="proctor/checkin.html" class="btn btn-primary">Launch Kiosk</a>
-            </div>
+                <!-- İhlal Bildir -->
+                <div class="glass-card module-card">
+                    <div class="card-icon pink">⚠️</div>
+                    <h3>İhlal Bildir</h3>
+                    <p>Manuel ihlal kaydı oluştur.</p>
+                    <a href="proctor/violation.html" class="btn btn-primary">İhlal Bildir</a>
+                </div>
 
-            <div class="glass-card proctor-only">
-                <div class="feature-icon">⚠️</div>
-                <h3>Direct Violation Log</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">Manually report an incident or mismatch.</p>
-                <a href="proctor/violation.html" class="btn btn-primary">Report Issue</a>
-            </div>
-
-            <!-- Common Modules -->
-            <div class="glass-card">
-                <div class="feature-icon">📊</div>
-                <h3>Reports & Analytics</h3>
-                <p style="color: var(--text-dim); margin: 1rem 0;">View attendance stats and violation logs.</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <a href="reports/status.html" class="btn btn-primary"
-                        style="flex: 1; text-align: center;">Status</a>
-                    <a href="reports/violations.html" class="btn btn-primary"
-                        style="flex: 1; text-align: center;">Violations</a>
+                <!-- Raporlar -->
+                <div class="glass-card module-card">
+                    <div class="card-icon purple">📊</div>
+                    <h3>Raporlar</h3>
+                    <p>Yoklama ve ihlal raporlarını görüntüle.</p>
+                    <div class="btn-group">
+                        <a href="reports/status.html" class="btn btn-primary">Durum</a>
+                        <a href="reports/violations.html" class="btn btn-primary">İhlaller</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,7 +119,24 @@
 
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
-    <script>App.checkAuth();</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            App.checkAuth();
+
+            // Show appropriate panel based on role
+            const role = localStorage.getItem('user_role')?.toLowerCase();
+            const adminPanel = document.getElementById('admin-panel');
+            const proctorPanel = document.getElementById('proctor-panel');
+
+            if (role === 'proctor') {
+                adminPanel.style.display = 'none';
+                proctorPanel.style.display = 'block';
+            } else {
+                adminPanel.style.display = 'block';
+                proctorPanel.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 
 </html>

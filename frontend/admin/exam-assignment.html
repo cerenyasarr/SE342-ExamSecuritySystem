@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınava Öğrenci Ataması - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
+
+        <div class="glass-card static form-card">
+            <h2>
+                <span class="icon">📝</span>
+                Sınava Öğrenci Ataması
+            </h2>
+
+            <div class="input-group">
+                <label>Sınav Seçin</label>
+                <select id="exam-select" class="input-control" onchange="loadExamData()">
+                    <option value="">-- Sınav Seçin --</option>
+                </select>
+            </div>
+
+            <div class="two-columns">
+                <!-- Kayıtlı Öğrenciler -->
+                <div class="list-panel">
+                    <h4>
+                        <span>👥</span>
+                        Kayıtlı Öğrenciler
+                    </h4>
+                    <div id="available-students">
+                        <div class="empty-state">Önce sınav seçin...</div>
+                    </div>
+                </div>
+
+                <!-- Sınava Atananlar -->
+                <div class="list-panel">
+                    <h4>
+                        <span>✅</span>
+                        Sınava Atananlar
+                    </h4>
+                    <div id="assigned-students">
+                        <div class="empty-state">Henüz atama yapılmadı</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let currentExamId = null;
+        let allStudents = [];
+        let assignedStudentIds = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadExams();
+        });
+
+        async function loadExams() {
+            const select = document.getElementById('exam-select');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+
+                select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
+                exams.forEach(exam => {
+                    const option = document.createElement('option');
+                    option.value = exam.id;
+                    option.textContent = `${exam.name} - ${exam.course_code || ''}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Sınavlar yüklenemedi:', error);
+            }
+        }
+
+        async function loadExamData() {
+            const select = document.getElementById('exam-select');
+            currentExamId = select.value;
+
+            if (!currentExamId) {
+                document.getElementById('available-students').innerHTML =
+                    '<div class="empty-state">Önce sınav seçin...</div>';
+                document.getElementById('assigned-students').innerHTML =
+                    '<div class="empty-state">Henüz atama yapılmadı</div>';
+                return;
+            }
+
+            try {
+                // Load all students
+                const studentsResponse = await API.get(API_CONFIG.ENDPOINTS.STUDENTS.BASE);
+                allStudents = await studentsResponse.json();
+
+                // Load assigned students for this exam
+                const assignedResponse = await API.get(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students`);
+                const assignedData = await assignedResponse.json();
+                assignedStudentIds = assignedData.map(s => s.student_id);
+
+                renderStudentLists();
+            } catch (error) {
+                console.error('Veri yüklenemedi:', error);
+            }
+        }
+
+        function renderStudentLists() {
+            const availableContainer = document.getElementById('available-students');
+            const assignedContainer = document.getElementById('assigned-students');
+
+            // Available students (not assigned)
+            const availableStudents = allStudents.filter(s => !assignedStudentIds.includes(s.student_id));
+
+            if (availableStudents.length === 0) {
+                availableContainer.innerHTML = '<div class="empty-state">Tüm öğrenciler atandı</div>';
+            } else {
+                availableContainer.innerHTML = availableStudents.map(student => `
+                    <div class="list-item" onclick="assignStudent('${student.student_id}')">
+                        <div class="info">
+                            <span class="name">${student.full_name}</span>
+                            <span class="meta">${student.student_id}</span>
+                        </div>
+                        <span style="color: var(--success);">+</span>
+                    </div>
+                `).join('');
+            }
+
+            // Assigned students
+            const assignedStudents = allStudents.filter(s => assignedStudentIds.includes(s.student_id));
+
+            if (assignedStudents.length === 0) {
+                assignedContainer.innerHTML = '<div class="empty-state">Henüz atama yapılmadı</div>';
+            } else {
+                assignedContainer.innerHTML = assignedStudents.map(student => `
+                    <div class="list-item" onclick="unassignStudent('${student.student_id}')">
+                        <div class="info">
+                            <span class="name">${student.full_name}</span>
+                            <span class="meta">${student.student_id}</span>
+                        </div>
+                        <span style="color: var(--danger);">×</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function assignStudent(studentId) {
+            if (!currentExamId) return;
+
+            try {
+                const response = await API.post(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students`, {
+                    student_id: studentId
+                });
+
+                if (response.ok) {
+                    assignedStudentIds.push(studentId);
+                    renderStudentLists();
+                    App.showSuccess('Öğrenci sınava atandı!');
+                } else {
+                    const error = await response.json();
+                    App.showError(error.message || 'Atama başarısız oldu.');
+                }
+            } catch (error) {
+                console.error('Atama hatası:', error);
+                App.showError('Sunucu bağlantı hatası.');
+            }
+        }
+
+        async function unassignStudent(studentId) {
+            if (!currentExamId) return;
+
+            try {
+                const response = await API.delete(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students/${studentId}`);
+
+                if (response.ok) {
+                    assignedStudentIds = assignedStudentIds.filter(id => id !== studentId);
+                    renderStudentLists();
+                    App.showSuccess('Öğrenci atamadan çıkarıldı!');
+                } else {
+                    const error = await response.json();
+                    App.showError(error.message || 'İşlem başarısız oldu.');
+                }
+            } catch (error) {
+                console.error('İşlem hatası:', error);
+                App.showError('Sunucu bağlantı hatası.');
+            }
+        }
+    </script>
+</body>
+
+</html>

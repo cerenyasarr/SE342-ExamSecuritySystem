@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğrenci Kaydı - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
+
+        <div class="glass-card static form-card">
+            <h2>
+                <span class="icon">📋</span>
+                Öğrenci Kaydı
+            </h2>
+
+            <form id="student-form" onsubmit="registerStudent(event)">
+                <div class="input-group">
+                    <label>Öğrenci Numarası</label>
+                    <input type="text" name="student_id" class="input-control" placeholder="Örn: 20190001" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Ad Soyad</label>
+                    <input type="text" name="full_name" class="input-control" placeholder="Örn: Ahmet Yılmaz" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Şifre</label>
+                    <input type="password" name="password" class="input-control" placeholder="••••••••" required>
+                </div>
+
+                <div class="camera-section">
+                    <div class="label">
+                        <span>📷</span>
+                        Referans Fotoğrafı
+                    </div>
+                    <div class="camera-preview" id="camera-preview">
+                        <video id="video" autoplay playsinline style="display: none;"></video>
+                        <img id="captured-image" style="display: none;">
+                        <span id="camera-placeholder" style="color: var(--text-dim);">Kamera kapalı</span>
+                    </div>
+                    <div class="camera-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="openCamera()">Kamerayı Aç</button>
+                        <button type="button" class="btn btn-primary" onclick="takePhoto()" id="capture-btn"
+                            disabled>Fotoğraf Çek</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Öğrenciyi Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let stream = null;
+        let capturedPhoto = null;
+
+        async function openCamera() {
+            try {
+                const video = document.getElementById('video');
+                const placeholder = document.getElementById('camera-placeholder');
+                const capturedImg = document.getElementById('captured-image');
+                const captureBtn = document.getElementById('capture-btn');
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }
+                });
+
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                capturedImg.style.display = 'none';
+                captureBtn.disabled = false;
+                capturedPhoto = null;
+            } catch (error) {
+                console.error('Kamera erişim hatası:', error);
+                alert('Kameraya erişilemedi. Lütfen izinleri kontrol edin.');
+            }
+        }
+
+        function takePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const capturedImg = document.getElementById('captured-image');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+            capturedImg.src = capturedPhoto;
+            capturedImg.style.display = 'block';
+            video.style.display = 'none';
+
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        async function registerStudent(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            if (!capturedPhoto) {
+                alert('Lütfen önce bir fotoğraf çekin.');
+                return;
+            }
+
+            const studentData = {
+                student_id: formData.get('student_id'),
+                full_name: formData.get('full_name'),
+                password: formData.get('password'),
+                reference_photo: capturedPhoto
+            };
+
+            try {
+                const response = await API.post(API_CONFIG.ENDPOINTS.STUDENTS.BASE, studentData);
+
+                if (response.ok) {
+                    App.showSuccess('Öğrenci başarıyla kaydedildi!');
+                    form.reset();
+                    document.getElementById('captured-image').style.display = 'none';
+                    document.getElementById('camera-placeholder').style.display = 'block';
+                    capturedPhoto = null;
+                } else {
+                    const error = await response.json();
+                    App.showError(error.message || 'Kayıt başarısız oldu.');
+                }
+            } catch (error) {
+                console.error('Kayıt hatası:', error);
+                App.showError('Sunucu bağlantı hatası.');
+            }
+        }
+    </script>
+</body>
+
+</html>

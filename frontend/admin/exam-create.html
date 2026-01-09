@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni Sınav Oluştur - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
+
+        <div class="glass-card static form-card">
+            <h2>
+                <span class="icon">📝</span>
+                Yeni Sınav Oluştur
+            </h2>
+
+            <form id="exam-form" onsubmit="createExam(event)">
+                <div class="input-group">
+                    <label>Sınav Adı</label>
+                    <input type="text" name="exam_name" class="input-control" placeholder="Örn: SE342 Final Sınavı"
+                        required>
+                </div>
+
+                <div class="input-group">
+                    <label>Ders</label>
+                    <select name="course_id" id="course-select" class="input-control" required>
+                        <option value="">-- Ders Seçin --</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Salon</label>
+                    <select name="room_id" id="room-select" class="input-control" required>
+                        <option value="">-- Salon Seçin --</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Başlangıç Tarihi/Saati</label>
+                    <input type="datetime-local" name="start_time" class="input-control" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Bitiş Tarihi/Saati</label>
+                    <input type="datetime-local" name="end_time" class="input-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sınav Oluştur</button>
+            </form>
+
+            <!-- Mevcut Sınavlar -->
+            <div class="existing-section">
+                <h3>
+                    <span>📋</span>
+                    Mevcut Sınavlar
+                </h3>
+                <div id="exams-list">
+                    <div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">
+                        Yükleniyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([
+                loadCourses(),
+                loadRooms(),
+                loadExams()
+            ]);
+        });
+
+        async function loadCourses() {
+            const select = document.getElementById('course-select');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.COURSES?.BASE || '/api/courses');
+                const courses = await response.json();
+
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = `${course.code} - ${course.name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Dersler yüklenemedi:', error);
+                // Add some dummy data for demo
+                select.innerHTML = `
+                    <option value="">-- Ders Seçin --</option>
+                    <option value="1">SE342 - Software Engineering</option>
+                    <option value="2">CS101 - Introduction to CS</option>
+                    <option value="3">MATH201 - Calculus II</option>
+                `;
+            }
+        }
+
+        async function loadRooms() {
+            const select = document.getElementById('room-select');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms');
+                const rooms = await response.json();
+
+                rooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room.id;
+                    option.textContent = `${room.name} (${room.capacity} kişi)`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Salonlar yüklenemedi:', error);
+                // Add some dummy data for demo
+                select.innerHTML = `
+                    <option value="">-- Salon Seçin --</option>
+                    <option value="1">D-101 (50 kişi)</option>
+                    <option value="2">Amfi-A (200 kişi)</option>
+                    <option value="3">D-102 (40 kişi)</option>
+                `;
+            }
+        }
+
+        async function loadExams() {
+            const container = document.getElementById('exams-list');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+
+                if (exams && exams.length > 0) {
+                    container.innerHTML = exams.map(exam => `
+                        <div class="existing-item">
+                            <div class="info">
+                                <span class="title">${exam.name}</span>
+                                <span class="meta">${exam.course_code || 'N/A'} | ${formatDate(exam.start_time)}</span>
+                            </div>
+                            <span class="status-badge status-scheduled">${exam.status || 'Scheduled'}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Henüz sınav oluşturulmamış</div>';
+                }
+            } catch (error) {
+                console.error('Sınavlar yüklenemedi:', error);
+                container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Sınavlar yüklenemedi</div>';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function createExam(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const examData = {
+                name: formData.get('exam_name'),
+                course_id: formData.get('course_id'),
+                room_id: formData.get('room_id'),
+                start_time: formData.get('start_time'),
+                end_time: formData.get('end_time')
+            };
+
+            try {
+                const response = await API.post(API_CONFIG.ENDPOINTS.EXAMS.BASE, examData);
+
+                if (response.ok) {
+                    App.showSuccess('Sınav başarıyla oluşturuldu!');
+                    form.reset();
+                    await loadExams();
+                } else {
+                    const error = await response.json();
+                    App.showError(error.message || 'Sınav oluşturulamadı.');
+                }
+            } catch (error) {
+                console.error('Sınav oluşturma hatası:', error);
+                App.showError('Sunucu bağlantı hatası.');
+            }
+        }
+    </script>
+</body>
+
+</html>

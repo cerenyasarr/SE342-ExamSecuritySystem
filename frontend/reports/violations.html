@@ -1,177 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
-    <title>Violation Report - ESS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İhlal ve Olay Raporları - ESS</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+        }
+
+        .filter-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .violation-card {
+            background: rgba(239, 68, 68, 0.08);
+            border-left: 4px solid var(--danger);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .violation-card .title {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .violation-card .student-info {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .violation-card .description {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 0.75rem;
+        }
+
+        .violation-card .right-side {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .violation-card .date {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .violation-card .status {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .btn-detail {
+            background: var(--primary);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 0.35rem;
+            font-size: 0.8rem;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container">
-        <a href="../dashboard.html" style="color: var(--text-dim); text-decoration: none;">← Back to Dashboard</a>
-        <h1 style="margin-top: 1rem;">Violation & Incident Report</h1>
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
 
-        <div class="glass-card" style="margin-top: 2rem;">
-            <!-- Filters -->
-            <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-                <div class="input-group" style="flex: 1; min-width: 200px; margin: 0;">
-                    <label>Filter by Exam</label>
-                    <select id="exam-filter" class="input-control" onchange="loadViolations()">
-                        <option value="">All Exams</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-                    <button class="btn btn-primary filter-btn active" onclick="filterByType('')" style="background: rgba(255,255,255,0.1);">All</button>
-                    <button class="btn btn-primary filter-btn" onclick="filterByType('face_mismatch')" style="background: rgba(255,255,255,0.1);">Identity Mismatch</button>
-                    <button class="btn btn-primary filter-btn" onclick="filterByType('wrong_seat')" style="background: rgba(255,255,255,0.1);">Seat Violation</button>
-                </div>
+        <h1 class="page-title" style="margin-bottom: 2rem;">
+            <span>🚨</span>
+            İhlal ve Olay Raporları
+        </h1>
+
+        <div class="glass-card static" style="max-width: 900px; margin: 0 auto;">
+            <!-- Filter Buttons -->
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+                <button class="filter-btn active" onclick="filterViolations('all', this)">Tümü</button>
+                <button class="filter-btn" onclick="filterViolations('face_mismatch', this)">Yüz Hatası</button>
+                <button class="filter-btn" onclick="filterViolations('wrong_seat', this)">Koltuk Hatası</button>
             </div>
 
             <!-- Violations List -->
-            <div id="violations-loading" style="text-align: center; padding: 2rem; color: var(--text-dim);">
-                Loading violations...
-            </div>
             <div id="violations-container">
-                <!-- Dynamically populated -->
+                <!-- Demo violations -->
+                <div class="violation-card" data-type="face_mismatch">
+                    <div class="left-side">
+                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
+                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
+                        <div class="description">Face verification failed (confidence: 0.58)</div>
+                        <button class="btn-detail">Detay Gör</button>
+                    </div>
+                    <div class="right-side">
+                        <div class="date">09.01.2026 12:55:03</div>
+                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
+                    </div>
+                </div>
+
+                <div class="violation-card" data-type="face_mismatch">
+                    <div class="left-side">
+                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
+                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
+                        <div class="description">Face verification failed (confidence: 0.58)</div>
+                        <button class="btn-detail">Detay Gör</button>
+                    </div>
+                    <div class="right-side">
+                        <div class="date">09.01.2026 12:53:02</div>
+                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
+                    </div>
+                </div>
+
+                <div class="violation-card" data-type="face_mismatch">
+                    <div class="left-side">
+                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
+                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
+                        <div class="description">Face verification failed (confidence: 0.00)</div>
+                        <button class="btn-detail">Detay Gör</button>
+                    </div>
+                    <div class="right-side">
+                        <div class="date">09.01.2026 12:52:48</div>
+                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
         let allViolations = [];
-        let currentFilter = '';
-        
+
         document.addEventListener('DOMContentLoaded', async () => {
-            await App.loadExams('exam-filter');
             await loadViolations();
         });
-        
+
         async function loadViolations() {
-            const examId = document.getElementById('exam-filter').value;
-            const loading = document.getElementById('violations-loading');
-            const container = document.getElementById('violations-container');
-            
-            loading.style.display = 'block';
-            container.innerHTML = '';
-            
             try {
-                let url = API_CONFIG.ENDPOINTS.VIOLATIONS.BASE;
-                if (examId) {
-                    url = API_CONFIG.ENDPOINTS.VIOLATIONS.BY_EXAM(examId);
-                }
-                
-                const response = await API.get(url);
-                const data = await response.json();
-                allViolations = examId ? data.violations : data;
-                
-                loading.style.display = 'none';
-                renderViolations();
+                const response = await API.get(API_CONFIG.ENDPOINTS.VIOLATIONS.BASE);
+                allViolations = await response.json();
+                renderViolations(allViolations);
             } catch (error) {
-                console.error('Error loading violations:', error);
-                loading.textContent = 'Error loading violations.';
+                console.log('Using demo data');
             }
         }
-        
-        function filterByType(type) {
-            currentFilter = type;
-            
-            // Update button states
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.background = 'rgba(255,255,255,0.1)';
+
+        function filterViolations(type, btn) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter cards
+            const cards = document.querySelectorAll('.violation-card');
+            cards.forEach(card => {
+                if (type === 'all' || card.dataset.type === type) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
             });
-            event.target.classList.add('active');
-            event.target.style.background = 'var(--primary)';
-            
-            renderViolations();
         }
-        
-        function renderViolations() {
+
+        function renderViolations(violations) {
+            if (!violations || violations.length === 0) return;
+
             const container = document.getElementById('violations-container');
-            
-            let filtered = allViolations;
-            if (currentFilter) {
-                filtered = allViolations.filter(v => v.violation_type === currentFilter);
-            }
-            
-            if (!filtered || filtered.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 2rem;">No violations found.</p>';
-                return;
-            }
-            
-            container.innerHTML = filtered.map(v => {
-                const isSevere = ['face_mismatch', 'unauthorized_material'].includes(v.violation_type);
-                const borderColor = isSevere ? 'var(--danger)' : '#f59e0b';
-                const bgColor = isSevere ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
-                const severity = isSevere ? 'Severe' : 'Warning';
-                
-                return `
-                    <div style="background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="color: ${borderColor};">${formatViolationType(v.violation_type)} - ${severity}</h3>
-                            <span style="color: var(--text-dim);">${new Date(v.detected_at).toLocaleTimeString()}</span>
-                        </div>
-                        <p style="margin: 0.5rem 0;"><strong>Student:</strong> ${v.student_name || 'Unknown'}</p>
-                        <p style="color: var(--text-dim);">${v.description || 'No description provided'}</p>
-                        <p style="margin: 0.5rem 0;"><strong>Status:</strong> 
-                            <span class="status-badge ${v.status === 'Confirmed' ? 'status-danger' : 'status-warning'}">${v.status}</span>
-                        </p>
-                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                            ${v.evidence_url ? '<button class="btn btn-primary" style="font-size: 0.8rem;">View Evidence</button>' : ''}
-                            ${v.status !== 'Confirmed' ? `<button class="btn btn-danger" style="font-size: 0.8rem;" onclick="confirmViolation(${v.id})">Confirm Violation</button>` : ''}
-                            ${v.status !== 'Resolved' ? `<button class="btn" style="font-size: 0.8rem; background: rgba(255,255,255,0.1);" onclick="resolveViolation(${v.id})">Resolve</button>` : ''}
-                        </div>
+            container.innerHTML = violations.map(v => `
+                <div class="violation-card" data-type="${v.violation_type}">
+                    <div class="left-side">
+                        <div class="title">${formatType(v.violation_type)} - KRİTİK</div>
+                        <div class="student-info"><strong>Öğrenci:</strong> ${v.student_name || 'Bilinmiyor'}</div>
+                        <div class="description">${v.description || 'Face verification failed'}</div>
+                        <button class="btn-detail">Detay Gör</button>
                     </div>
-                `;
-            }).join('');
+                    <div class="right-side">
+                        <div class="date">${formatDate(v.detected_at)}</div>
+                        <div class="status">Durum: <span style="color: #f59e0b;">${translateStatus(v.status)}</span></div>
+                    </div>
+                </div>
+            `).join('');
         }
-        
-        function formatViolationType(type) {
+
+        function formatType(type) {
             const types = {
-                'face_mismatch': 'Identity Mismatch',
-                'wrong_seat': 'Wrong Seat',
-                'phone_detected': 'Phone Detected',
-                'talking': 'Talking',
-                'looking_around': 'Looking Around',
-                'unauthorized_material': 'Unauthorized Material',
-                'absence': 'Absence',
-                'other': 'Other'
+                'face_mismatch': 'YÜZ UYUŞMAZLIĞI',
+                'wrong_seat': 'KOLTUK HATASI',
+                'phone_detected': 'TELEFON TESPİT EDİLDİ',
+                'talking': 'KONUŞMA',
+                'unauthorized_material': 'YASAK MATERYAL'
             };
-            return types[type] || type;
+            return types[type] || type?.toUpperCase() || 'İHLAL';
         }
-        
-        async function confirmViolation(id) {
-            try {
-                const response = await API.put(API_CONFIG.ENDPOINTS.VIOLATIONS.BY_ID(id), {
-                    status: 'Confirmed'
-                });
-                
-                if (response.ok) {
-                    App.showSuccess('Violation confirmed');
-                    await loadViolations();
-                }
-            } catch (error) {
-                App.showError('Error confirming violation');
-            }
+
+        function translateStatus(status) {
+            const statuses = {
+                'Pending': 'Pending Review',
+                'Confirmed': 'Onaylandı',
+                'Resolved': 'Çözüldü'
+            };
+            return statuses[status] || 'Pending Review';
         }
-        
-        async function resolveViolation(id) {
-            try {
-                const response = await API.put(API_CONFIG.ENDPOINTS.VIOLATIONS.BY_ID(id), {
-                    status: 'Resolved'
-                });
-                
-                if (response.ok) {
-                    App.showSuccess('Violation resolved');
-                    await loadViolations();
-                }
-            } catch (error) {
-                App.showError('Error resolving violation');
-            }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR');
         }
     </script>
 </body>

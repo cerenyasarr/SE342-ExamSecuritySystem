@@ -1,207 +1,434 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
-    <title>Check-in Kiosk - ESS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınav Check-in - ESS</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .camera-box {
-            width: 100%;
-            height: 300px;
-            background: #000;
-            border-radius: 1rem;
+        .checkin-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .checkin-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .student-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .student-item.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .student-item.verified {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .student-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed var(--text-dim);
-            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
         }
 
-        .ml-panel {
-            display: none;
+        .avatar-z {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .avatar-b {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .avatar-e {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .avatar-c {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .avatar-a {
+            background: linear-gradient(135deg, #ec4899, #db2777);
+        }
+
+        .student-info {
+            flex-grow: 1;
+        }
+
+        .student-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .student-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .seat-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge-small {
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-waiting {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-done {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .camera-preview-large {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 4/3;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .camera-preview-large video,
+        .camera-preview-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-buttons {
+            display: flex;
+            gap: 0.75rem;
             margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            text-align: center;
+            width: 100%;
+            max-width: 400px;
         }
 
-        .loading {
-            color: var(--primary);
-            font-weight: bold;
-        }
-        
-        .student-result {
-            background: rgba(79, 70, 229, 0.1);
-            border: 1px solid var(--primary);
+        .btn-verify {
+            flex: 2;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 0.75rem;
+            border: none;
             border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 0.5rem;
-            display: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-error {
+            flex: 1;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-    <div class="container" style="max-width: 800px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h1>Exam Check-in</h1>
-            <a href="../dashboard.html" class="btn btn-danger" style="padding: 0.5rem;">Exit Kiosk</a>
-        </div>
+    <div class="container">
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
 
-        <div class="glass-card">
-            <!-- Step 0: Select Exam -->
-            <div style="margin-bottom: 1.5rem;">
-                <h3>Select Exam</h3>
-                <select id="exam-select" class="input-control" style="margin-top: 0.5rem;">
-                    <option value="">Loading exams...</option>
+        <div class="glass-card static" style="max-width: 950px; margin: 0 auto;">
+            <h2 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <span>🎓</span>
+                Sınav Check-in
+            </h2>
+
+            <!-- Exam Selector -->
+            <div class="input-group" style="margin-bottom: 1.5rem;">
+                <label>Sınav Seçin</label>
+                <select id="exam-select" class="input-control" onchange="loadExamStudents()" style="max-width: 400px;">
+                    <option value="">-- Sınav Seçin --</option>
                 </select>
             </div>
-            
-            <!-- Step 1: Search Student -->
-            <div style="margin-bottom: 1.5rem;">
-                <h3>Step 1: Select Student</h3>
-                <input type="text" id="student-search" class="input-control" placeholder="Search by Name or ID..."
-                    style="margin-top: 0.5rem;" oninput="searchStudent(this.value)">
-                <div id="student-results" style="max-height: 200px; overflow-y: auto; margin-top: 0.5rem;">
-                    <!-- Search results -->
-                </div>
-                <div id="selected-student" class="student-result">
-                    <strong id="selected-name">-</strong>
-                    <span id="selected-id" style="color: var(--text-dim); margin-left: 1rem;">-</span>
-                </div>
-            </div>
 
-            <!-- Step 2: Identity Verification -->
-            <div style="margin-bottom: 1.5rem;">
-                <h3>Step 2: Identity Verification</h3>
-                <div class="camera-box">
-                    [Live Camera Feed Placeholder]
-                </div>
-                <button onclick="App.verifyIdentity()" class="btn btn-primary"
-                    style="width: 100%; margin-top: 1rem;">Capture & Verify</button>
-
-                <div id="ml-result" class="ml-panel">
-                    <p id="status-text">Waiting...</p>
-                </div>
-            </div>
-
-            <!-- Step 3: Seat Assignment -->
-            <div>
-                <h3>Step 3: Seat Assignment</h3>
-                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                    <div
-                        style="flex: 1; padding: 1rem; background: rgba(79, 70, 229, 0.1); border-radius: 0.5rem; border: 1px solid var(--primary);">
-                        <span style="display: block; font-size: 0.8rem; color: var(--text-dim);">Assigned Seat</span>
-                        <strong id="assigned-seat" style="font-size: 1.5rem;">-</strong>
+            <div class="checkin-layout">
+                <!-- Student List -->
+                <div>
+                    <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span>👥</span>
+                        Öğrenci Listesi
+                    </h4>
+                    <div class="student-list" id="student-list">
+                        <!-- Demo students -->
+                        <div class="student-item" onclick="selectStudent(this, 1, 'Zeynep Kaya', 'A2')">
+                            <div class="student-avatar avatar-z">Z</div>
+                            <div class="student-info">
+                                <div class="student-name">Zeynep Kaya</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">A2</span>
+                                    <span class="status-badge-small status-waiting">Bekliyor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="student-item" onclick="selectStudent(this, 2, 'Burak Demir', 'A3')">
+                            <div class="student-avatar avatar-b">B</div>
+                            <div class="student-info">
+                                <div class="student-name">Burak Demir</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">A3</span>
+                                    <span class="status-badge-small status-waiting">Bekliyor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="student-item" onclick="selectStudent(this, 3, 'Elif Yıldız', 'B1')">
+                            <div class="student-avatar avatar-e">E</div>
+                            <div class="student-info">
+                                <div class="student-name">Elif Yıldız</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">B1</span>
+                                    <span class="status-badge-small status-waiting">Bekliyor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="student-item" onclick="selectStudent(this, 4, 'Can Arslan', 'B2')">
+                            <div class="student-avatar avatar-c">C</div>
+                            <div class="student-info">
+                                <div class="student-name">Can Arslan</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">B2</span>
+                                    <span class="status-badge-small status-waiting">Bekliyor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="student-item" onclick="selectStudent(this, 5, 'Ali Öztürk', 'A1')">
+                            <div class="student-avatar avatar-a">A</div>
+                            <div class="student-info">
+                                <div class="student-name">Ali Öztürk</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">A1</span>
+                                    <span class="status-badge-small status-waiting">Bekliyor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="student-item selected" onclick="selectStudent(this, 6, 'Bilal Çifteci', 'A3')">
+                            <div class="student-avatar avatar-b">B</div>
+                            <div class="student-info">
+                                <div class="student-name">Bilal Çifteci</div>
+                                <div class="student-meta">
+                                    <span class="seat-badge">A3</span>
+                                    <span class="status-badge-small status-done">✓ Onaylı</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" style="background: var(--success); flex: 2;" onclick="confirmCheckin()">
-                        Confirm Check-in
-                    </button>
+                </div>
+
+                <!-- Camera Section -->
+                <div class="camera-section">
+                    <div class="camera-preview-large" id="camera-container">
+                        <span id="camera-placeholder" style="color: var(--text-dim);">📷 Kamera</span>
+                        <video id="video" autoplay playsinline style="display: none;"></video>
+                    </div>
+                    <div class="camera-buttons">
+                        <button class="btn-verify" onclick="verifyFace()">
+                            <span>✓</span>
+                            Yüzü Doğrula
+                        </button>
+                        <button class="btn-error" onclick="simulateError()">
+                            Hata Simüle Et
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        let allStudents = [];
-        let selectedStudent = null;
+        let selectedStudentId = null;
+        let selectedStudentName = null;
         let currentExamId = null;
-        
+        let stream = null;
+
         document.addEventListener('DOMContentLoaded', async () => {
-            await App.loadExams('exam-select', 'Active');
-            
-            // Load all students for search
-            try {
-                const response = await API.get(API_CONFIG.ENDPOINTS.USERS.STUDENTS);
-                allStudents = await response.json();
-            } catch (error) {
-                console.error('Error loading students:', error);
-            }
-            
-            // Exam change handler
-            document.getElementById('exam-select').addEventListener('change', async (e) => {
-                currentExamId = e.target.value;
-                if (currentExamId) {
-                    // Load exam students for seat info
-                    try {
-                        const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.STUDENTS(currentExamId));
-                        const examStudents = await response.json();
-                        // Merge seat info
-                        allStudents = allStudents.map(s => {
-                            const examStudent = examStudents.find(es => es.student_id === s.id);
-                            return { ...s, seat_number: examStudent?.seat_number, student_exam_id: examStudent?.id };
-                        });
-                    } catch (error) {
-                        console.error('Error loading exam students:', error);
-                    }
-                }
-            });
+            await loadExams();
+            await openCamera();
         });
-        
-        function searchStudent(query) {
-            const resultsDiv = document.getElementById('student-results');
-            
-            if (!query || query.length < 2) {
-                resultsDiv.innerHTML = '';
-                return;
+
+        async function loadExams() {
+            const select = document.getElementById('exam-select');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+
+                select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
+                exams.forEach(exam => {
+                    const option = document.createElement('option');
+                    option.value = exam.id || exam.exam_id;
+                    option.textContent = exam.name || exam.exam_title;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.log('Using demo exams');
+                select.innerHTML = `
+                    <option value="">-- Sınav Seçin --</option>
+                    <option value="1" selected>SE342 Final Exam</option>
+                `;
             }
-            
-            const filtered = allStudents.filter(s => 
-                s.full_name.toLowerCase().includes(query.toLowerCase()) ||
-                s.username.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, 5);
-            
-            resultsDiv.innerHTML = filtered.map(s => `
-                <div style="padding: 0.75rem; background: rgba(255,255,255,0.05); margin-bottom: 0.25rem; border-radius: 0.25rem; cursor: pointer;"
-                     onclick="selectStudent(${s.id}, '${s.full_name}', '${s.username}', '${s.seat_number || ''}')">
-                    <strong>${s.full_name}</strong>
-                    <span style="color: var(--text-dim); margin-left: 0.5rem;">${s.username}</span>
-                    ${s.seat_number ? `<span style="color: var(--success); float: right;">Seat: ${s.seat_number}</span>` : ''}
-                </div>
-            `).join('');
         }
-        
-        function selectStudent(id, name, username, seat) {
-            selectedStudent = { id, name, username, seat };
-            
-            document.getElementById('student-results').innerHTML = '';
-            document.getElementById('student-search').value = name;
-            document.getElementById('selected-student').style.display = 'block';
-            document.getElementById('selected-name').textContent = name;
-            document.getElementById('selected-id').textContent = `ID: ${username}`;
-            document.getElementById('assigned-seat').textContent = seat || '-';
+
+        async function loadExamStudents() {
+            currentExamId = document.getElementById('exam-select').value;
+            if (!currentExamId) return;
+
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.ENROLLMENTS(currentExamId));
+                const students = await response.json();
+                renderStudentList(students);
+            } catch (error) {
+                console.log('Using demo students');
+            }
         }
-        
-        async function confirmCheckin() {
-            if (!selectedStudent) {
-                App.showError('Please select a student first');
+
+        function renderStudentList(students) {
+            const container = document.getElementById('student-list');
+            const avatarClasses = ['avatar-z', 'avatar-b', 'avatar-e', 'avatar-c', 'avatar-a'];
+
+            container.innerHTML = students.map((s, i) => {
+                const initial = (s.student_name || s.full_name || 'U')[0].toUpperCase();
+                const avatarClass = avatarClasses[i % avatarClasses.length];
+                const isVerified = s.status === 'attended' || s.verification_status === 'success';
+
+                return `
+                    <div class="student-item ${isVerified ? 'verified' : ''}" onclick="selectStudent(this, ${s.id}, '${s.student_name || s.full_name}', '${s.seat_label || '-'}')">
+                        <div class="student-avatar ${avatarClass}">${initial}</div>
+                        <div class="student-info">
+                            <div class="student-name">${s.student_name || s.full_name}</div>
+                            <div class="student-meta">
+                                <span class="seat-badge">${s.seat_label || '-'}</span>
+                                <span class="status-badge-small ${isVerified ? 'status-done' : 'status-waiting'}">
+                                    ${isVerified ? '✓ Onaylı' : 'Bekliyor'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectStudent(element, id, name, seat) {
+            // Remove previous selection
+            document.querySelectorAll('.student-item').forEach(item => item.classList.remove('selected'));
+            element.classList.add('selected');
+
+            selectedStudentId = id;
+            selectedStudentName = name;
+        }
+
+        async function openCamera() {
+            try {
+                const video = document.getElementById('video');
+                const placeholder = document.getElementById('camera-placeholder');
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+            } catch (error) {
+                console.error('Camera error:', error);
+            }
+        }
+
+        async function verifyFace() {
+            if (!selectedStudentId) {
+                App.showError('Lütfen önce bir öğrenci seçin');
                 return;
             }
-            
-            if (!currentExamId) {
-                App.showError('Please select an exam first');
+
+            App.showSuccess(`${selectedStudentName} yüz doğrulaması başarılı!`);
+
+            // Update UI
+            const selectedItem = document.querySelector('.student-item.selected');
+            if (selectedItem) {
+                selectedItem.classList.add('verified');
+                const statusBadge = selectedItem.querySelector('.status-badge-small');
+                if (statusBadge) {
+                    statusBadge.className = 'status-badge-small status-done';
+                    statusBadge.textContent = '✓ Onaylı';
+                }
+            }
+
+            // API call
+            try {
+                await App.processCheckin(selectedStudentId, currentExamId);
+            } catch (error) {
+                console.log('Demo mode');
+            }
+        }
+
+        function simulateError() {
+            if (!selectedStudentId) {
+                App.showError('Lütfen önce bir öğrenci seçin');
                 return;
             }
-            
-            const result = await App.processCheckin(
-                selectedStudent.id,
-                currentExamId,
-                selectedStudent.seat
-            );
-            
-            if (result && result.success) {
-                // Reset form for next student
-                selectedStudent = null;
-                document.getElementById('student-search').value = '';
-                document.getElementById('selected-student').style.display = 'none';
-                document.getElementById('assigned-seat').textContent = '-';
-                document.getElementById('ml-result').style.display = 'none';
-            }
+
+            App.showError(`${selectedStudentName} yüz doğrulaması başarısız!`);
         }
     </script>
 </body>

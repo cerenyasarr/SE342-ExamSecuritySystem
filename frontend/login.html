@@ -1,49 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Exam Security System</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="login-wrapper">
-      <div class="glass-card" style="width: 100%; max-width: 400px">
-        <h2 style="text-align: center; margin-bottom: 2rem">
-          Exam Security System
-        </h2>
-        <form onsubmit="App.login(event)">
-          <div class="input-group">
-            <label>Username</label>
-            <input
-              type="text"
-              id="username"
-              class="input-control"
-              placeholder="Enter ID"
-              required
-            />
-          </div>
-          <div class="input-group">
-            <label>Password</label>
-            <input
-              type="password"
-              id="password"
-              class="input-control"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%">
-            Sign In
-          </button>
-        </form>
-      </div>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş - Exam Security System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="login-wrapper">
+    <div class="glass-card static login-card">
+      <h1>
+        <span>📋</span>
+        Exam Security System
+      </h1>
+      <form onsubmit="App.login(event)">
+        <div class="input-group">
+          <label>Kullanıcı Adı</label>
+          <input type="text" id="username" class="input-control" placeholder="Kullanıcı ID girin" required>
+        </div>
+        <div class="input-group">
+          <label>Şifre</label>
+          <input type="password" id="password" class="input-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Giriş Yap
+        </button>
+      </form>
     </div>
-    <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
-  </body>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
 </html>

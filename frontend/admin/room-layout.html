@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salon ve Koltuk Düzeni - ESS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
+
+        <h1 class="page-title">
+            <span class="icon">🪑</span>
+            Salon ve Koltuk Düzeni
+        </h1>
+
+        <div class="glass-card static form-card" style="max-width: 900px;">
+            <!-- Yeni Salon Ekle -->
+            <div class="room-form">
+                <div class="input-group name">
+                    <label>Salon Adı</label>
+                    <input type="text" id="room-name" class="input-control" placeholder="Örn: D-101">
+                </div>
+                <div class="input-group size">
+                    <label>Satır</label>
+                    <input type="number" id="room-rows" class="input-control" value="5" min="1" max="20">
+                </div>
+                <div class="input-group size">
+                    <label>Sütun</label>
+                    <input type="number" id="room-cols" class="input-control" value="6" min="1" max="20">
+                </div>
+                <button class="btn btn-primary" onclick="addRoom()" style="height: 42px;">Salon Ekle</button>
+            </div>
+
+            <div class="seating-container">
+                <!-- Salonlar Listesi -->
+                <div class="seating-sidebar">
+                    <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📋</span>
+                        Salonlar
+                    </h4>
+                    <div class="room-list" id="room-list">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </div>
+                </div>
+
+                <!-- Koltuk Düzeni -->
+                <div class="seating-main">
+                    <div id="seating-placeholder" class="seating-placeholder">
+                        Salon seçin...
+                    </div>
+                    <div id="seating-grid" class="seating-grid" style="display: none;">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let rooms = [];
+        let selectedRoomId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadRooms();
+        });
+
+        async function loadRooms() {
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms');
+                rooms = await response.json();
+                renderRoomList();
+            } catch (error) {
+                console.error('Salonlar yüklenemedi:', error);
+                // Demo data
+                rooms = [
+                    { id: 1, name: 'D-101', rows: 5, cols: 10, capacity: 50 },
+                    { id: 2, name: 'Amfi-A', rows: 10, cols: 20, capacity: 200 },
+                    { id: 3, name: 'D-102', rows: 4, cols: 10, capacity: 40 }
+                ];
+                renderRoomList();
+            }
+        }
+
+        function renderRoomList() {
+            const container = document.getElementById('room-list');
+
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 1rem;">Henüz salon eklenmemiş</div>';
+                return;
+            }
+
+            container.innerHTML = rooms.map(room => `
+                <div class="room-item ${selectedRoomId === room.id ? 'selected' : ''}" onclick="selectRoom(${room.id})">
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-capacity">Kapasite: ${room.capacity || (room.rows * room.cols)} kişi</div>
+                </div>
+            `).join('');
+        }
+
+        function selectRoom(roomId) {
+            selectedRoomId = roomId;
+            renderRoomList();
+            renderSeatingGrid(roomId);
+        }
+
+        function renderSeatingGrid(roomId) {
+            const room = rooms.find(r => r.id === roomId);
+            if (!room) return;
+
+            const placeholder = document.getElementById('seating-placeholder');
+            const grid = document.getElementById('seating-grid');
+
+            placeholder.style.display = 'none';
+            grid.style.display = 'grid';
+
+            const rows = room.rows || 5;
+            const cols = room.cols || 10;
+
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            let seatsHtml = '';
+            for (let i = 0; i < rows * cols; i++) {
+                const row = Math.floor(i / cols) + 1;
+                const col = (i % cols) + 1;
+                seatsHtml += `<div class="seat" data-row="${row}" data-col="${col}" onclick="toggleSeat(this)">${row}-${col}</div>`;
+            }
+
+            grid.innerHTML = seatsHtml;
+        }
+
+        function toggleSeat(seatElement) {
+            seatElement.classList.toggle('blocked');
+        }
+
+        async function addRoom() {
+            const name = document.getElementById('room-name').value.trim();
+            const rows = parseInt(document.getElementById('room-rows').value);
+            const cols = parseInt(document.getElementById('room-cols').value);
+
+            if (!name) {
+                App.showError('Lütfen salon adı girin.');
+                return;
+            }
+
+            const roomData = {
+                name: name,
+                rows: rows,
+                cols: cols,
+                capacity: rows * cols
+            };
+
+            try {
+                const response = await API.post(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms', roomData);
+
+                if (response.ok) {
+                    App.showSuccess('Salon başarıyla eklendi!');
+                    document.getElementById('room-name').value = '';
+                    await loadRooms();
+                } else {
+                    const error = await response.json();
+                    App.showError(error.message || 'Salon eklenemedi.');
+                }
+            } catch (error) {
+                console.error('Salon ekleme hatası:', error);
+                // Demo mode - add locally
+                const newRoom = {
+                    id: rooms.length + 1,
+                    ...roomData
+                };
+                rooms.push(newRoom);
+                renderRoomList();
+                App.showSuccess('Salon eklendi (demo mod)');
+                document.getElementById('room-name').value = '';
+            }
+        }
+    </script>
+</body>
+
+</html>
