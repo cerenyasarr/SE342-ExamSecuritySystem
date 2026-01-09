@@ -1,0 +1,1 @@
+https://exam-security-system.atlassian.net/jira/software/projects/SCRUM/list?jql=project+%3D+SCRUM+ORDER+BY+resolution+ASC%2C+created+DESC&atlOrigin=eyJpIjoiMjRkNzFhY2IyMjc4NGM2ZWFjMjQ2MmVkNzVkOThkMTUiLCJwIjoiaiJ9
