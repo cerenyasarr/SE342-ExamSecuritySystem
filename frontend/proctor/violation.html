@@ -14,26 +14,31 @@
         <h1 style="margin-top: 1rem; color: var(--danger);">Log Violation</h1>
 
         <div class="glass-card" style="margin-top: 2rem;">
-            <form>
+            <form id="violation-form" onsubmit="submitViolation(event)">
                 <div class="input-group">
-                    <label>Student ID / Name</label>
-                    <input type="text" class="input-control" placeholder="Search student...">
+                    <label>Select Exam</label>
+                    <select id="exam-select" class="input-control" onchange="loadExamStudents()" required>
+                        <option value="">Loading exams...</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Select Student</label>
+                    <select id="student-exam-select" name="student_exam_id" class="input-control" required>
+                        <option value="">Select exam first...</option>
+                    </select>
                 </div>
 
                 <div class="input-group">
                     <label>Violation Type</label>
-                    <select class="input-control">
-                        <option>Identity Mismatch</option>
-                        <option>Wrong Seat</option>
-                        <option>Unauthorized Object</option>
-                        <option>Disruptive Behavior</option>
-                        <option>Other</option>
+                    <select id="violation-type" name="violation_type" class="input-control" required>
+                        <option value="">Loading types...</option>
                     </select>
                 </div>
 
                 <div class="input-group">
                     <label>Description</label>
-                    <textarea class="input-control" rows="4" placeholder="Describe the incident details..."></textarea>
+                    <textarea name="description" class="input-control" rows="4" placeholder="Describe the incident details..."></textarea>
                 </div>
 
                 <div class="input-group">
@@ -45,13 +50,83 @@
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
-                    <button type="button" class="btn btn-danger" style="flex: 1;">Submit Report</button>
-                    <button type="button" class="btn"
-                        style="background: rgba(255,255,255,0.1); color: white;">Cancel</button>
+                    <button type="submit" class="btn btn-danger" style="flex: 1;">Submit Report</button>
+                    <a href="../dashboard.html" class="btn"
+                        style="background: rgba(255,255,255,0.1); color: white; text-align: center;">Cancel</a>
                 </div>
             </form>
         </div>
     </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.loadExams('exam-select', 'Active');
+            await App.loadViolationTypes('violation-type');
+        });
+        
+        async function loadExamStudents() {
+            const examId = document.getElementById('exam-select').value;
+            const studentSelect = document.getElementById('student-exam-select');
+            
+            if (!examId) {
+                studentSelect.innerHTML = '<option value="">Select exam first...</option>';
+                return;
+            }
+            
+            studentSelect.innerHTML = '<option value="">Loading students...</option>';
+            
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.STUDENTS(examId));
+                const students = await response.json();
+                
+                if (students && students.length > 0) {
+                    studentSelect.innerHTML = '<option value="">Select student...</option>' +
+                        students.map(s => `<option value="${s.id}">${s.student_name} (${s.student_number})</option>`).join('');
+                } else {
+                    studentSelect.innerHTML = '<option value="">No students in this exam</option>';
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                studentSelect.innerHTML = '<option value="">Error loading students</option>';
+            }
+        }
+        
+        async function submitViolation(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const studentExamId = form.querySelector('[name="student_exam_id"]').value;
+            const violationType = form.querySelector('[name="violation_type"]').value;
+            const description = form.querySelector('[name="description"]').value;
+            
+            if (!studentExamId || !violationType) {
+                App.showError('Please fill all required fields');
+                return;
+            }
+            
+            try {
+                const response = await API.post(API_CONFIG.ENDPOINTS.VIOLATIONS.BASE, {
+                    student_exam_id: parseInt(studentExamId),
+                    violation_type: violationType,
+                    description: description
+                });
+                
+                if (response.ok) {
+                    App.showSuccess('Violation reported successfully!');
+                    form.reset();
+                    document.getElementById('student-exam-select').innerHTML = '<option value="">Select exam first...</option>';
+                } else {
+                    const data = await response.json();
+                    App.showError(data.error || 'Failed to report violation');
+                }
+            } catch (error) {
+                console.error('Error submitting violation:', error);
+                App.showError('Connection error');
+            }
+        }
+    </script>
 </body>
 
 </html>

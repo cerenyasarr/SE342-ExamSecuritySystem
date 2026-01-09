@@ -21,6 +21,7 @@
             text-align: center;
             border-radius: 0.5rem;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .seat:hover {
@@ -46,31 +47,98 @@
         <h1 style="margin-top: 1rem;">Seating Plan Editor</h1>
 
         <div class="glass-card" style="margin-top: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Room: Lecture Hall A</h3>
-                <div>
-                    <button class="btn btn-primary" style="font-size: 0.9rem;">Auto-Assign</button>
-                    <button class="btn btn-primary" style="font-size: 0.9rem; background: var(--success);">Save
-                        Layout</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div class="input-group" style="margin: 0; flex: 1; min-width: 200px;">
+                    <label>Select Exam</label>
+                    <select id="exam-select" class="input-control" onchange="loadSeating()">
+                        <option value="">Loading exams...</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" style="font-size: 0.9rem;" onclick="autoAssign()">Auto-Assign</button>
+                    <button class="btn btn-primary" style="font-size: 0.9rem; background: var(--success);">Save Layout</button>
                 </div>
             </div>
 
-            <div class="seating-grid">
-                <!-- Mock Seats -->
-                <div class="seat selected">A1<br><small style="color: var(--success)">Assigned</small></div>
-                <div class="seat">A2<br><small>Empty</small></div>
-                <div class="seat blocked">A3<br><small>Broken</small></div>
-                <div class="seat">A4<br><small>Empty</small></div>
-                <div class="seat">A5<br><small>Empty</small></div>
-
-                <div class="seat">B1<br><small>Empty</small></div>
-                <div class="seat selected">B2<br><small style="color: var(--success)">Assigned</small></div>
-                <div class="seat">B3<br><small>Empty</small></div>
-                <div class="seat">B4<br><small>Empty</small></div>
-                <div class="seat">B5<br><small>Empty</small></div>
+            <div id="seating-loading" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                Select an exam to view seating plan
+            </div>
+            
+            <div id="seating-grid" class="seating-grid" style="display: none;">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <div id="seating-stats" style="margin-top: 2rem; display: none;">
+                <div style="display: flex; gap: 2rem; justify-content: center;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="stat-assigned">0</div>
+                        <div style="color: var(--text-dim);">Assigned</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--text-light);" id="stat-empty">0</div>
+                        <div style="color: var(--text-dim);">Empty</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let currentExamId = null;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.loadExams('exam-select');
+        });
+        
+        async function loadSeating() {
+            const examSelect = document.getElementById('exam-select');
+            currentExamId = examSelect.value;
+            
+            const loading = document.getElementById('seating-loading');
+            const grid = document.getElementById('seating-grid');
+            const stats = document.getElementById('seating-stats');
+            
+            if (!currentExamId) {
+                loading.style.display = 'block';
+                loading.textContent = 'Select an exam to view seating plan';
+                grid.style.display = 'none';
+                stats.style.display = 'none';
+                return;
+            }
+            
+            loading.style.display = 'block';
+            loading.textContent = 'Loading seating plan...';
+            grid.style.display = 'none';
+            
+            try {
+                const students = await App.loadSeatingGrid(currentExamId, 'seating-grid');
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+                stats.style.display = 'block';
+                
+                // Update stats
+                const assigned = students.filter(s => s.seat_number).length;
+                document.getElementById('stat-assigned').textContent = assigned;
+                document.getElementById('stat-empty').textContent = 50 - assigned;
+            } catch (error) {
+                loading.textContent = 'Error loading seating plan.';
+            }
+        }
+        
+        async function autoAssign() {
+            if (!currentExamId) {
+                App.showError('Please select an exam first');
+                return;
+            }
+            
+            const students = await App.autoAssignSeats(currentExamId);
+            if (students) {
+                await loadSeating();
+            }
+        }
+    </script>
 </body>
 
 </html>

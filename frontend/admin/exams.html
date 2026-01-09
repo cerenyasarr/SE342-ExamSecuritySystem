@@ -15,45 +15,93 @@
 
         <div class="glass-card" style="margin-top: 2rem;">
             <h2>Create New Exam</h2>
-            <form style="margin-top: 1.5rem;">
+            <form id="exam-form" onsubmit="App.createExam(event)" style="margin-top: 1.5rem;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="input-group">
-                        <label>Exam Name</label>
-                        <input type="text" class="input-control" placeholder="e.g. SE342 Midterm">
+                        <label>Exam Title</label>
+                        <input type="text" name="exam_title" class="input-control" placeholder="e.g. Midterm Exam" required>
                     </div>
                     <div class="input-group">
                         <label>Course Code</label>
-                        <input type="text" class="input-control" placeholder="e.g. SE342">
+                        <input type="text" name="course_code" class="input-control" placeholder="e.g. CS101" required>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                     <div class="input-group">
                         <label>Date</label>
-                        <input type="date" class="input-control">
+                        <input type="date" name="exam_date" class="input-control" required>
                     </div>
                     <div class="input-group">
                         <label>Start Time</label>
-                        <input type="time" class="input-control">
+                        <input type="time" name="start_time" class="input-control" required>
                     </div>
                     <div class="input-group">
                         <label>Duration (mins)</label>
-                        <input type="number" class="input-control" value="120">
+                        <input type="number" name="duration" class="input-control" value="120" min="30" max="300">
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label>Select Room</label>
-                    <select class="input-control">
-                        <option>Lecture Hall A (Cap: 50)</option>
-                        <option>Lab 101 (Cap: 30)</option>
+                    <select id="room-select" name="room_id" class="input-control">
+                        <option value="">Loading rooms...</option>
                     </select>
                 </div>
 
-                <button type="button" class="btn btn-primary">Save Exam Definition</button>
+                <button type="submit" class="btn btn-primary">Save Exam Definition</button>
             </form>
         </div>
+
+        <!-- Existing Exams List -->
+        <div class="glass-card" style="margin-top: 2rem;">
+            <h2>Existing Exams</h2>
+            <div id="exams-loading" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                Loading exams...
+            </div>
+            <div id="exams-list" style="margin-top: 1rem;">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
     </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load dropdowns
+            await App.loadRooms('room-select');
+            
+            // Load existing exams
+            const loading = document.getElementById('exams-loading');
+            const list = document.getElementById('exams-list');
+            
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+                loading.style.display = 'none';
+                
+                if (exams && exams.length > 0) {
+                    list.innerHTML = exams.map(exam => `
+                        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${exam.name}</strong>
+                                <span style="color: var(--text-dim); margin-left: 1rem;">${exam.course_code || 'No Course'}</span>
+                                <span style="color: var(--text-dim); margin-left: 1rem;">${new Date(exam.start_time).toLocaleDateString()}</span>
+                            </div>
+                            <div>
+                                <span class="status-badge ${exam.status === 'Active' ? 'status-success' : 'status-warning'}">${exam.status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p style="text-align: center; color: var(--text-dim);">No exams found. Create your first exam above.</p>';
+                }
+            } catch (error) {
+                loading.textContent = 'Error loading exams.';
+            }
+        });
+    </script>
 </body>
 
 </html>

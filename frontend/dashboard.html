@@ -14,6 +14,7 @@
         style="border-radius: 0; display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;">
         <h3>ESS Dashboard</h3>
         <div style="display: flex; gap: 1rem; align-items: center;">
+            <span id="role-display" style="background: var(--primary); padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem;"></span>
             <span id="username-display">User</span>
             <button onclick="App.logout()" class="btn btn-danger"
                 style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
@@ -80,6 +81,7 @@
         </div>
     </main>
 
+    <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script>App.checkAuth();</script>
 </body>

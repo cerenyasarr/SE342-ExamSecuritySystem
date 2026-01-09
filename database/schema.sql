@@ -1,59 +1,79 @@
--- Users Table
-CREATE TABLE Users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+-- 1. ROLES (Bağımsız Tablo)
+CREATE TABLE roles (
+    role_id VARCHAR(50) PRIMARY KEY, -- 'admin' veya 'proctor' gibi string ID
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- 2. ROOMS (Bağımsız Tablo)
+CREATE TABLE rooms (
+    room_id VARCHAR(50) PRIMARY KEY,
+    room_name VARCHAR(100) NOT NULL,
+    capacity INTEGER NOT NULL,
+    total_rows INTEGER,
+    total_columns INTEGER
+);
+
+-- 3. STUDENTS (Bağımsız Tablo - Öğrenci Giriş Yapmaz, Veridir)
+CREATE TABLE students (
+    student_id VARCHAR(50) PRIMARY KEY, -- UUID veya Okul Numarası olabilir
+    student_number VARCHAR(50) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('Student', 'Instructor', 'Admin', 'Proctor')),
-    reference_photo_url VARCHAR(255),
+    email VARCHAR(100) UNIQUE,
+    reference_image_path TEXT, -- Dosya yolu uzun olabilir, TEXT uygundur
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Rooms Table
-CREATE TABLE Rooms (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    capacity INT NOT NULL,
-    layout_config JSONB -- Stores grid or coordinates for seating
+-- 4. SYSTEM USERS (Roles tablosuna bağımlı)
+CREATE TABLE system_users (
+    user_id VARCHAR(50) PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role_id VARCHAR(50) REFERENCES roles(role_id) ON DELETE RESTRICT, -- Rol silinirse kullanıcı boşa düşmesin, hata versin
+    full_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Courses Table
-CREATE TABLE Courses (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    instructor_id INT REFERENCES Users(id)
-);
-
--- Exams Table
-CREATE TABLE Exams (
-    id SERIAL PRIMARY KEY,
-    course_id INT REFERENCES Courses(id),
-    room_id INT REFERENCES Rooms(id),
-    name VARCHAR(100) NOT NULL,
+-- 5. EXAMS (Rooms ve SystemUsers tablosuna bağımlı)
+CREATE TABLE exams (
+    exam_id VARCHAR(50) PRIMARY KEY,
+    course_code VARCHAR(20) NOT NULL,
+    exam_title VARCHAR(100) NOT NULL,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    status VARCHAR(20) DEFAULT 'Scheduled' -- Scheduled, Active, Completed
+    status VARCHAR(20) DEFAULT 'scheduled', -- scheduled, active, completed
+    room_id VARCHAR(50) REFERENCES rooms(room_id) ON DELETE SET NULL,
+    proctor_id VARCHAR(50) REFERENCES system_users(user_id) ON DELETE SET NULL, -- Gözetmen
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- StudentExams (Attendance/Registration)
-CREATE TABLE StudentExams (
-    id SERIAL PRIMARY KEY,
-    student_id INT REFERENCES Users(id),
-    exam_id INT REFERENCES Exams(id),
-    seat_number VARCHAR(10),
-    checkin_time TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'Registered', -- Registered, Present, Absent, Flagged
-    UNIQUE(student_id, exam_id)
+-- 6. EXAM ENROLLMENTS (Exams ve Students tablolarını bağlayan köprü)
+CREATE TABLE exam_enrollments (
+    enrollment_id VARCHAR(50) PRIMARY KEY,
+    exam_id VARCHAR(50) REFERENCES exams(exam_id) ON DELETE CASCADE, -- Sınav silinirse kayıt da silinsin
+    student_id VARCHAR(50) REFERENCES students(student_id) ON DELETE CASCADE, -- Öğrenci silinirse kayıt da silinsin
+    assigned_row INTEGER,
+    assigned_col INTEGER,
+    status VARCHAR(20) DEFAULT 'registered', -- registered, attended, absent
+    UNIQUE(exam_id, student_id) -- Bir öğrenci aynı sınava iki kere kayıt olamaz
 );
 
--- Violations Table
-CREATE TABLE Violations (
-    id SERIAL PRIMARY KEY,
-    student_exam_id INT REFERENCES StudentExams(id),
-    violation_type VARCHAR(50) NOT NULL,
+-- 7. CHECK-IN LOGS (ExamEnrollments tablosuna bağımlı)
+CREATE TABLE check_in_logs (
+    log_id VARCHAR(50) PRIMARY KEY,
+    enrollment_id VARCHAR(50) REFERENCES exam_enrollments(enrollment_id) ON DELETE CASCADE,
+    captured_image_path TEXT,
+    confidence_score FLOAT, -- 0.0 ile 1.0 arası
+    is_verified BOOLEAN DEFAULT FALSE,
+    is_seat_correct BOOLEAN DEFAULT FALSE,
+    attempt_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. VIOLATIONS (ExamEnrollments tablosuna bağımlı)
+CREATE TABLE violations (
+    violation_id VARCHAR(50) PRIMARY KEY,
+    enrollment_id VARCHAR(50) REFERENCES exam_enrollments(enrollment_id) ON DELETE CASCADE,
+    violation_type VARCHAR(50), -- 'wrong_seat', 'face_mismatch' vb.
     description TEXT,
-    evidence_url VARCHAR(255),
-    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'Pending Review'
+    evidence_image_path TEXT,
+    reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

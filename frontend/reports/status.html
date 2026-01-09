@@ -14,54 +14,90 @@
         <h1 style="margin-top: 1rem;">Exam Status Report</h1>
 
         <div class="glass-card" style="margin-top: 2rem;">
+            <!-- Exam Selector -->
+            <div class="input-group" style="margin-bottom: 2rem;">
+                <label>Select Exam</label>
+                <select id="exam-select" class="input-control" onchange="loadExamStatus()">
+                    <option value="">Loading exams...</option>
+                </select>
+            </div>
+            
+            <!-- Stats Cards -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 2rem;">
                 <div style="text-align: center;">
-                    <div style="font-size: 3rem; font-weight: bold; color: var(--primary);">45</div>
+                    <div id="stat-total" style="font-size: 3rem; font-weight: bold; color: var(--primary);">-</div>
                     <div style="color: var(--text-dim);">Total Checked-in</div>
                 </div>
                 <div style="text-align: center;">
-                    <div style="font-size: 3rem; font-weight: bold; color: var(--text-light);">5</div>
+                    <div id="stat-pending" style="font-size: 3rem; font-weight: bold; color: var(--text-light);">-</div>
                     <div style="color: var(--text-dim);">Pending</div>
                 </div>
                 <div style="text-align: center;">
-                    <div style="font-size: 3rem; font-weight: bold; color: var(--success);">98%</div>
+                    <div id="stat-rate" style="font-size: 3rem; font-weight: bold; color: var(--success);">-</div>
                     <div style="color: var(--text-dim);">Attendance Rate</div>
                 </div>
             </div>
 
             <h3>Live Feed</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; color: var(--text-light);">
+            <div id="feed-loading" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                Select an exam to view status
+            </div>
+            <table id="feed-table" style="width: 100%; border-collapse: collapse; margin-top: 1rem; color: var(--text-light); display: none;">
                 <thead>
                     <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <th style="padding: 1rem;">Time</th>
                         <th style="padding: 1rem;">Student</th>
                         <th style="padding: 1rem;">Seat</th>
-                        <th style="padding: 1rem;">Result</th>
+                        <th style="padding: 1rem;">Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:05 AM</td>
-                        <td style="padding: 1rem;">John Doe</td>
-                        <td style="padding: 1rem;">A1</td>
-                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:02 AM</td>
-                        <td style="padding: 1rem;">Jane Smith</td>
-                        <td style="padding: 1rem;">B3</td>
-                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:00 AM</td>
-                        <td style="padding: 1rem;">Mark Lee</td>
-                        <td style="padding: 1rem;">-</td>
-                        <td style="padding: 1rem;"><span style="color: var(--danger);">Failed (Mismatch)</span></td>
-                    </tr>
+                <tbody id="status-tbody">
+                    <!-- Dynamically populated -->
                 </tbody>
             </table>
         </div>
     </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.loadExams('exam-select');
+        });
+        
+        async function loadExamStatus() {
+            const examId = document.getElementById('exam-select').value;
+            const loading = document.getElementById('feed-loading');
+            const table = document.getElementById('feed-table');
+            
+            if (!examId) {
+                loading.style.display = 'block';
+                loading.textContent = 'Select an exam to view status';
+                table.style.display = 'none';
+                document.getElementById('stat-total').textContent = '-';
+                document.getElementById('stat-pending').textContent = '-';
+                document.getElementById('stat-rate').textContent = '-';
+                return;
+            }
+            
+            loading.style.display = 'block';
+            loading.textContent = 'Loading...';
+            table.style.display = 'none';
+            
+            try {
+                const data = await App.loadExamStatus(examId, 'status-tbody');
+                
+                if (data) {
+                    loading.style.display = 'none';
+                    table.style.display = 'table';
+                } else {
+                    loading.textContent = 'No data available for this exam.';
+                }
+            } catch (error) {
+                loading.textContent = 'Error loading exam status.';
+            }
+        }
+    </script>
 </body>
 
 </html>
