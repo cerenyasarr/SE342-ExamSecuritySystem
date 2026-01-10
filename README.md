@@ -8,6 +8,10 @@
 
 A comprehensive Exam Security System featuring face recognition check-in, automated seating plans, and violation monitoring.
 
+## 🌐 Live Demo
+
+🔗 **[https://se342-examsecuritysystem-4.onrender.com/login.html](https://se342-examsecuritysystem-4.onrender.com/login.html)**
+
 ---
 
 ## 🛠️ Tech Stack
