@@ -4,7 +4,7 @@
  */
 
 const API_CONFIG = {
-    BASE_URL: 'http://localhost:5000',
+    BASE_URL: 'https://se342-examsecuritysystem-3.onrender.com',
 
     ENDPOINTS: {
         // Auth endpoints
