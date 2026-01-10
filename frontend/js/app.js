@@ -4,12 +4,6 @@
 // ============================================
 
 const App = {
-    // Demo accounts for testing without backend
-    DEMO_ACCOUNTS: {
-        'admin': { password: 'admin123', role: 'admin', name: 'Admin User' },
-        'proctor': { password: 'proctor123', role: 'proctor', name: 'Bilal Çifteci' }
-    },
-
     login: async (e) => {
         e.preventDefault();
 
@@ -20,21 +14,6 @@ const App = {
         const originalText = submitBtn.textContent;
         submitBtn.textContent = 'Giriş yapılıyor...';
         submitBtn.disabled = true;
-
-        // Check demo accounts first
-        const demoUser = App.DEMO_ACCOUNTS[username.toLowerCase()];
-        if (demoUser && demoUser.password === password) {
-            localStorage.setItem('token', 'demo-token-' + Date.now());
-            localStorage.setItem('user', JSON.stringify({ username, full_name: demoUser.name }));
-            localStorage.setItem('user_role', demoUser.role);
-            localStorage.setItem('username', demoUser.name);
-
-            App.showSuccess('Giriş başarılı!');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 500);
-            return;
-        }
 
         try {
             const response = await API.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
@@ -57,15 +36,16 @@ const App = {
                 console.log('[AUTH] Login successful, role:', userRole);
                 console.log('[AUTH] Token stored:', data.access_token ? 'Yes' : 'No');
 
-                // Redirect to dashboard (role-based UI handled there)
-                window.location.href = 'dashboard.html';
+                App.showSuccess('Giriş başarılı!');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
             } else {
                 App.showError(data.error || 'Giriş başarısız. Lütfen tekrar deneyin.');
             }
         } catch (error) {
             console.error('Login error:', error);
-            // If backend is down, show demo account hint
-            App.showError('Sunucu bağlantı hatası. Demo için: admin/admin123 veya proctor/proctor123');
+            App.showError('Sunucu bağlantı hatası. Backend çalışıyor mu?');
         } finally {
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;

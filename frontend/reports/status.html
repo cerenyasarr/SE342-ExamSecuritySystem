@@ -1,70 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exam Status Report - ESS</title>
+    <title>Sınav Durum Raporu - ESS</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <a href="../dashboard.html" class="back-link">← Back to Dashboard</a>
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
 
-        <h1 class="page-title" style="margin-bottom: 2rem;">Exam Status Report</h1>
+        <h1 class="page-title" style="margin-bottom: 2rem;">Sınav Durum Raporu</h1>
 
         <div class="glass-card static" style="max-width: 900px; margin: 0 auto;">
+            <!-- Exam Selector -->
+            <div class="input-group" style="margin-bottom: 1.5rem;">
+                <label>Sınav Seçin</label>
+                <select id="exam-select" class="input-control" onchange="loadExamStatus()" style="max-width: 400px;">
+                    <option value="">-- Sınav Seçin --</option>
+                </select>
+            </div>
+
             <!-- Stats -->
             <div
                 style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 2rem; text-align: center;">
                 <div>
-                    <div id="stat-total" style="font-size: 3rem; font-weight: bold; color: #3b82f6;">45</div>
-                    <div style="color: var(--text-dim); font-size: 0.9rem;">Total Checked-in</div>
+                    <div id="stat-total" style="font-size: 3rem; font-weight: bold; color: #3b82f6;">-</div>
+                    <div style="color: var(--text-dim); font-size: 0.9rem;">Katılan</div>
                 </div>
                 <div>
-                    <div id="stat-pending" style="font-size: 3rem; font-weight: bold; color: var(--text-light);">5</div>
-                    <div style="color: var(--text-dim); font-size: 0.9rem;">Pending</div>
+                    <div id="stat-pending" style="font-size: 3rem; font-weight: bold; color: var(--text-light);">-</div>
+                    <div style="color: var(--text-dim); font-size: 0.9rem;">Bekleyen</div>
                 </div>
                 <div>
-                    <div id="stat-rate" style="font-size: 3rem; font-weight: bold; color: var(--success);">98%</div>
-                    <div style="color: var(--text-dim); font-size: 0.9rem;">Attendance Rate</div>
+                    <div id="stat-rate" style="font-size: 3rem; font-weight: bold; color: var(--success);">-%</div>
+                    <div style="color: var(--text-dim); font-size: 0.9rem;">Katılım Oranı</div>
                 </div>
             </div>
 
             <!-- Live Feed -->
-            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Live Feed</h3>
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Öğrenci Listesi</h3>
 
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Time</th>
-                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Student
+                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Öğrenci No
                         </th>
-                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Seat</th>
-                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Result
+                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Öğrenci
+                        </th>
+                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Koltuk</th>
+                        <th style="text-align: left; padding: 1rem; color: var(--text-dim); font-weight: 500;">Durum
                         </th>
                     </tr>
                 </thead>
                 <tbody id="feed-tbody">
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:05 AM</td>
-                        <td style="padding: 1rem;">John Doe</td>
-                        <td style="padding: 1rem;">A1</td>
-                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:02 AM</td>
-                        <td style="padding: 1rem;">Jane Smith</td>
-                        <td style="padding: 1rem;">B3</td>
-                        <td style="padding: 1rem;"><span style="color: var(--success);">Success</span></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">10:00 AM</td>
-                        <td style="padding: 1rem;">Mark Lee</td>
-                        <td style="padding: 1rem;">-</td>
-                        <td style="padding: 1rem;"><span style="color: var(--danger);">Failed (Mismatch)</span></td>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                            Önce bir sınav seçin
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -75,48 +71,81 @@
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadExamStatus();
+            await loadExams();
         });
 
-        async function loadExamStatus() {
+        async function loadExams() {
+            const select = document.getElementById('exam-select');
             try {
-                // Try to load real data
-                const response = await API.get(API_CONFIG.ENDPOINTS.STUDENT_EXAMS.BASE);
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+
+                select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
+                exams.forEach(exam => {
+                    const option = document.createElement('option');
+                    option.value = exam.exam_id;
+                    option.textContent = `${exam.exam_title} - ${exam.course_code}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Sınavlar yüklenemedi:', error);
+                select.innerHTML = '<option value="">Sınav yüklenemedi</option>';
+            }
+        }
+
+        async function loadExamStatus() {
+            const examId = document.getElementById('exam-select').value;
+            const tbody = document.getElementById('feed-tbody');
+
+            if (!examId) {
+                document.getElementById('stat-total').textContent = '-';
+                document.getElementById('stat-pending').textContent = '-';
+                document.getElementById('stat-rate').textContent = '-%';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-dim);">Önce bir sınav seçin</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-dim);">Yükleniyor...</td></tr>';
+
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.STUDENT_EXAMS.EXAM_STATUS(examId));
                 const data = await response.json();
 
-                if (data && data.length > 0) {
-                    const attended = data.filter(s => s.status === 'attended').length;
-                    const pending = data.filter(s => s.status === 'pending').length;
-                    const rate = data.length > 0 ? Math.round((attended / data.length) * 100) : 0;
+                // Update stats
+                document.getElementById('stat-total').textContent = data.attended || 0;
+                document.getElementById('stat-pending').textContent = data.pending || 0;
+                document.getElementById('stat-rate').textContent = `${data.attendance_rate || 0}%`;
 
-                    document.getElementById('stat-total').textContent = attended;
-                    document.getElementById('stat-pending').textContent = pending;
-                    document.getElementById('stat-rate').textContent = rate + '%';
-
-                    // Update table
-                    const tbody = document.getElementById('feed-tbody');
-                    tbody.innerHTML = data.slice(0, 10).map(s => `
+                // Update table
+                if (data.students && data.students.length > 0) {
+                    tbody.innerHTML = data.students.map(s => `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <td style="padding: 1rem;">${formatTime(s.check_in_time)}</td>
-                            <td style="padding: 1rem;">${s.student_name || 'Unknown'}</td>
+                            <td style="padding: 1rem;">${s.student_number || '-'}</td>
+                            <td style="padding: 1rem;">${s.student_name || 'Bilinmiyor'}</td>
                             <td style="padding: 1rem;">${s.seat_label || '-'}</td>
                             <td style="padding: 1rem;">
-                                <span style="color: ${s.verification_status === 'success' ? 'var(--success)' : 'var(--danger)'};">
-                                    ${s.verification_status === 'success' ? 'Success' : 'Failed (Mismatch)'}
+                                <span style="color: ${s.status === 'attended' ? 'var(--success)' : 'var(--text-dim)'};">
+                                    ${translateStatus(s.status)}
                                 </span>
                             </td>
                         </tr>
                     `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-dim);">Bu sınava kayıtlı öğrenci yok</td></tr>';
                 }
             } catch (error) {
-                console.log('Using demo data');
+                console.error('Durum yüklenemedi:', error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-dim);">Veri yüklenemedi</td></tr>';
             }
         }
 
-        function formatTime(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        function translateStatus(status) {
+            const statuses = {
+                'registered': 'Bekliyor',
+                'attended': 'Katıldı',
+                'absent': 'Katılmadı'
+            };
+            return statuses[status] || status || 'Bekliyor';
         }
     </script>
 </body>

@@ -45,7 +45,8 @@ const API_CONFIG = {
             BASE: '/api/exams',
             BY_ID: (id) => `/api/exams/${id}`,
             STATUS: (id) => `/api/exams/${id}/status`,
-            ENROLLMENTS: (id) => `/api/exams/${id}/enrollments`
+            ENROLLMENTS: (id) => `/api/exams/${id}/enrollments`,
+            SEATS: (id) => `/api/exams/${id}/seats`
         },
 
         // Student-Exam (Enrollment) endpoints
@@ -53,6 +54,7 @@ const API_CONFIG = {
             BASE: '/api/student-exams',
             BY_ID: (id) => `/api/student-exams/${id}`,
             CHECKIN: '/api/student-exams/checkin',
+            VERIFY_FACE: '/api/student-exams/verify-face',
             EXAM_STATUS: (examId) => `/api/student-exams/exam/${examId}/status`,
             ASSIGN_SEATS: (examId) => `/api/student-exams/exam/${examId}/assign-seats`
         },

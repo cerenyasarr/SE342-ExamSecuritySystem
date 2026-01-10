@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from datetime import datetime
-from src.models import db, ExamEnrollment, Exam, Student, CheckInLog
+from src.models import db, ExamEnrollment, Exam, Student, CheckInLog, Violation
+from src.services.face_verification import get_face_service
 
 student_exam_bp = Blueprint('student_exams', __name__)
 
@@ -143,6 +144,104 @@ def process_checkin():
         'message': 'Check-in successful' if is_seat_correct else 'Check-in with wrong seat',
         'enrollment': enrollment.to_dict(),
         'is_seat_correct': is_seat_correct
+    }), 200
+
+
+@student_exam_bp.route('/verify-face', methods=['POST'])
+@jwt_required()
+def verify_face():
+    """
+    Verify student face against reference photo.
+    
+    Expected JSON body:
+    {
+        "student_id": "uuid",
+        "exam_id": "uuid",
+        "captured_image": "base64 encoded image"
+    }
+    """
+    data = request.get_json()
+    
+    required_fields = ['student_id', 'exam_id', 'captured_image']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'{field} is required'}), 400
+    
+    # Get student
+    student = Student.query.get(data['student_id'])
+    if not student:
+        return jsonify({'error': 'Student not found'}), 404
+    
+    # Get enrollment
+    enrollment = ExamEnrollment.query.filter_by(
+        exam_id=data['exam_id'],
+        student_id=data['student_id']
+    ).first()
+    
+    if not enrollment:
+        return jsonify({'error': 'Student not enrolled in this exam'}), 404
+    
+    # Check if student has reference image
+    reference_image = student.reference_image_path
+    if not reference_image:
+        return jsonify({
+            'error': 'Student has no reference photo',
+            'verified': False,
+            'confidence': 0.0
+        }), 400
+    
+    # Debug: Check reference image format
+    is_base64 = reference_image.startswith('data:image') or len(reference_image) > 200
+    print(f"[DEBUG] Reference image for {student.full_name}:")
+    print(f"[DEBUG]   - Is base64: {is_base64}")
+    print(f"[DEBUG]   - Length: {len(reference_image)}")
+    print(f"[DEBUG]   - First 50 chars: {reference_image[:50]}...")
+    
+    if not is_base64:
+        return jsonify({
+            'error': 'Öğrencinin referans fotoğrafı base64 formatında değil. Lütfen öğrenciyi yeniden kaydedin.',
+            'verified': False,
+            'confidence': 0.0
+        }), 400
+    
+    # Perform face verification
+    face_service = get_face_service()
+    result = face_service.verify_face(
+        captured_image_base64=data['captured_image'],
+        reference_image_base64=reference_image
+    )
+    
+    # Create check-in log
+    log = CheckInLog(
+        enrollment_id=enrollment.enrollment_id,
+        captured_image_path=data['captured_image'][:100] + '...',  # Truncate for storage
+        confidence_score=result.confidence,
+        is_verified=result.is_match,
+        is_seat_correct=True  # Seat check done separately
+    )
+    db.session.add(log)
+    
+    # If face matches, update enrollment status
+    if result.is_match:
+        enrollment.status = 'attended'
+    else:
+        # Create violation for face mismatch
+        violation = Violation(
+            enrollment_id=enrollment.enrollment_id,
+            violation_type='face_mismatch',
+            description=f'Yüz doğrulama başarısız. Güven skoru: {result.confidence:.2f}'
+        )
+        db.session.add(violation)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'verified': result.is_match,
+        'confidence': result.confidence,
+        'distance': result.distance,
+        'message': result.message,
+        'student_name': student.full_name,
+        'enrollment': enrollment.to_dict()
     }), 200
 
 

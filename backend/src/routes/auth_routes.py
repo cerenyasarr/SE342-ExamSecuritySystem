@@ -45,12 +45,18 @@ def login():
         print("[DEBUG] Password validation failed")
         return jsonify({'error': 'Invalid username or password'}), 401
     
-    # Create JWT token with user identity
-    access_token = create_access_token(identity={
-        'user_id': user.user_id,
+    # Create JWT token with user identity (must be a string)
+    # Additional user data goes in additional_claims
+    additional_claims = {
         'username': user.username,
-        'role': user.role.name if user.role else None
-    })
+        'role': user.role.name if user.role else 'proctor',
+        'full_name': user.full_name
+    }
+    
+    access_token = create_access_token(
+        identity=str(user.user_id),  # Identity must be a string
+        additional_claims=additional_claims
+    )
     
     return jsonify({
         'access_token': access_token,
@@ -92,8 +98,8 @@ def register():
 @jwt_required()
 def get_current_user():
     """Get current logged-in user info"""
-    identity = get_jwt_identity()
-    user = SystemUser.query.get(identity['user_id'])
+    user_id = get_jwt_identity()  # Now returns string user_id
+    user = SystemUser.query.get(user_id)
     
     if not user:
         return jsonify({'error': 'User not found'}), 404

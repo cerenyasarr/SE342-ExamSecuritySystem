@@ -1,66 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Violation - ESS</title>
+    <title>İhlal Bildir - ESS</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <a href="../dashboard.html" class="back-link">← Back to Dashboard</a>
+        <a href="../dashboard.html" class="back-link">← Dashboard'a Dön</a>
 
-        <h1 style="color: var(--danger); margin-bottom: 2rem; font-size: 1.75rem;">Log Violation</h1>
+        <h1 style="color: var(--danger); margin-bottom: 2rem; font-size: 1.75rem;">İhlal Bildir</h1>
 
         <div class="glass-card static form-card">
             <form id="violation-form" onsubmit="submitViolation(event)">
                 <div class="input-group">
-                    <label>Student ID / Name</label>
-                    <input type="text" id="student-search" class="input-control" placeholder="Search student..."
-                        oninput="searchStudent(this.value)">
-                    <div id="student-results" style="margin-top: 0.5rem;"></div>
-                    <input type="hidden" id="student-id" name="student_id">
-                </div>
-
-                <div class="input-group">
-                    <label>Violation Type</label>
-                    <select id="violation-type" name="violation_type" class="input-control" required>
-                        <option value="face_mismatch">Identity Mismatch</option>
-                        <option value="wrong_seat">Wrong Seat</option>
-                        <option value="phone_detected">Phone Detected</option>
-                        <option value="talking">Talking</option>
-                        <option value="looking_around">Looking Around</option>
-                        <option value="unauthorized_material">Unauthorized Material</option>
-                        <option value="other">Other</option>
+                    <label>Sınav Seçin</label>
+                    <select id="exam-select" class="input-control" onchange="loadExamEnrollments()" required>
+                        <option value="">-- Sınav Seçin --</option>
                     </select>
                 </div>
 
                 <div class="input-group">
-                    <label>Description</label>
-                    <textarea name="description" class="input-control" rows="4"
-                        placeholder="Describe the incident details..." style="resize: vertical;"></textarea>
+                    <label>Öğrenci Seçin</label>
+                    <select id="student-select" class="input-control" required>
+                        <option value="">-- Önce sınav seçin --</option>
+                    </select>
                 </div>
 
                 <div class="input-group">
-                    <label>Evidence (Optional)</label>
+                    <label>İhlal Türü</label>
+                    <select id="violation-type" name="violation_type" class="input-control" required>
+                        <option value="">Yükleniyor...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Açıklama</label>
+                    <textarea name="description" class="input-control" rows="4"
+                        placeholder="Olay detaylarını açıklayın..." style="resize: vertical;"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Kanıt (Opsiyonel)</label>
                     <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 2rem; text-align: center; cursor: pointer;"
                         onclick="document.getElementById('evidence-input').click()">
-                        <span style="color: var(--text-dim);">📷 Upload Photo or Screenshot</span>
+                        <span id="evidence-label" style="color: var(--text-dim);">📷 Fotoğraf veya Ekran Görüntüsü Yükle</span>
                     </div>
-                    <input type="file" id="evidence-input" accept="image/*" style="display: none;">
+                    <input type="file" id="evidence-input" accept="image/*" style="display: none;" onchange="updateEvidenceLabel()">
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
                     <button type="submit" class="btn btn-primary"
                         style="flex: 1; background: linear-gradient(135deg, var(--danger), #dc2626);">
-                        Submit Report
+                        Rapor Gönder
                     </button>
                     <a href="../dashboard.html" class="btn"
                         style="background: rgba(255,255,255,0.1); color: white; text-align: center; padding: 0.75rem 1.5rem;">
-                        Cancel
+                        İptal
                     </a>
                 </div>
             </form>
@@ -70,81 +70,141 @@
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        let allStudents = [];
-        let selectedStudentId = null;
+        let currentExamId = null;
+        let enrollments = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadStudents();
+            await Promise.all([
+                loadExams(),
+                loadViolationTypes()
+            ]);
         });
 
-        async function loadStudents() {
+        async function loadExams() {
+            const select = document.getElementById('exam-select');
             try {
-                const response = await API.get(API_CONFIG.ENDPOINTS.USERS.STUDENTS);
-                allStudents = await response.json();
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.BASE);
+                const exams = await response.json();
+
+                select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
+                exams.forEach(exam => {
+                    const option = document.createElement('option');
+                    option.value = exam.exam_id;
+                    option.textContent = `${exam.exam_title} - ${exam.course_code}`;
+                    select.appendChild(option);
+                });
             } catch (error) {
-                console.log('Using demo mode');
+                console.error('Sınavlar yüklenemedi:', error);
+                select.innerHTML = '<option value="">Sınav yüklenemedi</option>';
             }
         }
 
-        function searchStudent(query) {
-            const resultsDiv = document.getElementById('student-results');
+        async function loadViolationTypes() {
+            const select = document.getElementById('violation-type');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.VIOLATIONS.TYPES);
+                const types = await response.json();
 
-            if (!query || query.length < 2) {
-                resultsDiv.innerHTML = '';
+                select.innerHTML = '<option value="">-- İhlal Türü Seçin --</option>';
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.code;
+                    option.textContent = type.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('İhlal türleri yüklenemedi:', error);
+                select.innerHTML = `
+                    <option value="">-- İhlal Türü Seçin --</option>
+                    <option value="face_mismatch">Yüz Uyuşmazlığı</option>
+                    <option value="wrong_seat">Yanlış Koltuk</option>
+                    <option value="phone_detected">Telefon Tespit Edildi</option>
+                    <option value="talking">Konuşma</option>
+                    <option value="unauthorized_material">İzinsiz Materyal</option>
+                    <option value="other">Diğer</option>
+                `;
+            }
+        }
+
+        async function loadExamEnrollments() {
+            currentExamId = document.getElementById('exam-select').value;
+            const studentSelect = document.getElementById('student-select');
+
+            if (!currentExamId) {
+                studentSelect.innerHTML = '<option value="">-- Önce sınav seçin --</option>';
                 return;
             }
 
-            const filtered = allStudents.filter(s =>
-                (s.full_name && s.full_name.toLowerCase().includes(query.toLowerCase())) ||
-                (s.username && s.username.toLowerCase().includes(query.toLowerCase()))
-            ).slice(0, 5);
+            studentSelect.innerHTML = '<option value="">Yükleniyor...</option>';
 
-            resultsDiv.innerHTML = filtered.map(s => `
-                <div class="list-item" onclick="selectStudent(${s.id}, '${s.full_name}')">
-                    <span>${s.full_name}</span>
-                    <span style="color: var(--text-dim);">${s.username || ''}</span>
-                </div>
-            `).join('');
+            try {
+                const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.ENROLLMENTS(currentExamId));
+                enrollments = await response.json();
+
+                if (enrollments.length === 0) {
+                    studentSelect.innerHTML = '<option value="">Bu sınava kayıtlı öğrenci yok</option>';
+                } else {
+                    studentSelect.innerHTML = '<option value="">-- Öğrenci Seçin --</option>';
+                    enrollments.forEach(e => {
+                        const option = document.createElement('option');
+                        option.value = e.enrollment_id;
+                        option.textContent = `${e.student_name || 'Bilinmiyor'} (${e.student_number || '-'}) ${e.seat_label ? '- Koltuk: ' + e.seat_label : ''}`;
+                        studentSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Öğrenciler yüklenemedi:', error);
+                studentSelect.innerHTML = '<option value="">Öğrenciler yüklenemedi</option>';
+            }
         }
 
-        function selectStudent(id, name) {
-            selectedStudentId = id;
-            document.getElementById('student-search').value = name;
-            document.getElementById('student-id').value = id;
-            document.getElementById('student-results').innerHTML = '';
+        function updateEvidenceLabel() {
+            const input = document.getElementById('evidence-input');
+            const label = document.getElementById('evidence-label');
+            if (input.files.length > 0) {
+                label.textContent = `✓ ${input.files[0].name}`;
+                label.style.color = 'var(--success)';
+            }
         }
 
         async function submitViolation(e) {
             e.preventDefault();
 
             const form = e.target;
+            const enrollmentId = document.getElementById('student-select').value;
             const violationType = form.querySelector('[name="violation_type"]').value;
             const description = form.querySelector('[name="description"]').value;
 
-            if (!selectedStudentId) {
-                App.showError('Please select a student');
+            if (!enrollmentId) {
+                App.showError('Lütfen bir öğrenci seçin');
+                return;
+            }
+
+            if (!violationType) {
+                App.showError('Lütfen ihlal türü seçin');
                 return;
             }
 
             try {
                 const response = await API.post(API_CONFIG.ENDPOINTS.VIOLATIONS.BASE, {
-                    student_id: selectedStudentId,
+                    enrollment_id: enrollmentId,
                     violation_type: violationType,
                     description: description
                 });
 
                 if (response.ok) {
-                    App.showSuccess('Violation reported successfully!');
+                    App.showSuccess('İhlal başarıyla raporlandı!');
                     form.reset();
-                    selectedStudentId = null;
+                    document.getElementById('student-select').innerHTML = '<option value="">-- Önce sınav seçin --</option>';
+                    document.getElementById('evidence-label').textContent = '📷 Fotoğraf veya Ekran Görüntüsü Yükle';
+                    document.getElementById('evidence-label').style.color = 'var(--text-dim)';
                 } else {
                     const data = await response.json();
-                    App.showError(data.error || 'Failed to report violation');
+                    App.showError(data.error || 'İhlal raporlanamadı');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                App.showSuccess('Violation reported (demo mode)');
-                form.reset();
+                console.error('Hata:', error);
+                App.showError('Sunucu bağlantı hatası');
             }
         }
     </script>

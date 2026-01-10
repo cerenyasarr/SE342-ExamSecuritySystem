@@ -85,12 +85,12 @@
                     list.innerHTML = exams.map(exam => `
                         <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <strong>${exam.name}</strong>
+                                <strong>${exam.exam_title}</strong>
                                 <span style="color: var(--text-dim); margin-left: 1rem;">${exam.course_code || 'No Course'}</span>
                                 <span style="color: var(--text-dim); margin-left: 1rem;">${new Date(exam.start_time).toLocaleDateString()}</span>
                             </div>
                             <div>
-                                <span class="status-badge ${exam.status === 'Active' ? 'status-success' : 'status-warning'}">${exam.status}</span>
+                                <span class="status-badge ${exam.status === 'active' ? 'status-success' : 'status-warning'}">${exam.status || 'scheduled'}</span>
                             </div>
                         </div>
                     `).join('');

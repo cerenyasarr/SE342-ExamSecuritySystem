@@ -7,6 +7,300 @@
     <title>Sınava Öğrenci Ataması - ESS</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(30, 30, 45, 0.95), rgba(20, 20, 35, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.5);
+        }
+
+        .student-info-banner {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .student-info-banner .avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .student-info-banner .details h4 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .student-info-banner .details p {
+            margin: 0.25rem 0 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Room Info */
+        .room-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .room-info span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        /* Seat Grid */
+        .seat-grid-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .classroom-label {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .seat-grid {
+            display: grid;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .seat {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .seat.available {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.3));
+            color: #22c55e;
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .seat.available:hover {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.5));
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .seat.occupied {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.5);
+            cursor: not-allowed;
+        }
+
+        .seat.selected {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
+            color: #fff;
+            border-color: #8b5cf6;
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Legend */
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-color.available {
+            background: rgba(34, 197, 94, 0.5);
+            border: 1px solid #22c55e;
+        }
+
+        .legend-color.occupied {
+            background: rgba(239, 68, 68, 0.5);
+            border: 1px solid #ef4444;
+        }
+
+        .legend-color.selected {
+            background: rgba(139, 92, 246, 0.6);
+            border: 1px solid #8b5cf6;
+        }
+
+        /* Modal Actions */
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-confirm:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* No Room Warning */
+        .no-room-warning {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-room-warning .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .no-room-warning p {
+            margin: 0.5rem 0;
+        }
+
+        /* Room status badge in exam info */
+        .exam-room-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+        }
+
+        .exam-room-badge.no-room {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,6 +318,7 @@
                 <select id="exam-select" class="input-control" onchange="loadExamData()">
                     <option value="">-- Sınav Seçin --</option>
                 </select>
+                <div id="exam-room-info"></div>
             </div>
 
             <div class="two-columns">
@@ -52,12 +347,49 @@
         </div>
     </div>
 
+    <!-- Koltuk Seçim Modal -->
+    <div class="modal-overlay" id="seat-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🪑 Koltuk Seçimi</h3>
+                <button class="modal-close" onclick="closeSeatModal()">×</button>
+            </div>
+
+            <div class="student-info-banner" id="modal-student-info">
+                <div class="avatar">👤</div>
+                <div class="details">
+                    <h4 id="modal-student-name">-</h4>
+                    <p id="modal-student-number">-</p>
+                </div>
+            </div>
+
+            <div class="room-info" id="modal-room-info">
+                <span>🏫 <span id="modal-room-name">-</span></span>
+                <span>📐 <span id="modal-room-size">-</span></span>
+            </div>
+
+            <div id="seat-grid-wrapper">
+                <!-- Dinamik olarak doldurulacak -->
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeSeatModal()">İptal</button>
+                <button class="btn btn-confirm" id="btn-confirm-seat" onclick="confirmSeatAssignment()" disabled>
+                    Koltuğu Ata
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
         let currentExamId = null;
         let allStudents = [];
-        let assignedStudentIds = [];
+        let enrollments = [];
+        let seatData = null;
+        let selectedStudent = null;
+        let selectedSeat = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExams();
@@ -72,12 +404,14 @@
                 select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
                 exams.forEach(exam => {
                     const option = document.createElement('option');
-                    option.value = exam.id;
-                    option.textContent = `${exam.name} - ${exam.course_code || ''}`;
+                    option.value = exam.exam_id;
+                    option.textContent = `${exam.exam_title} - ${exam.course_code}`;
+                    option.dataset.roomName = exam.room_name || '';
                     select.appendChild(option);
                 });
             } catch (error) {
                 console.error('Sınavlar yüklenemedi:', error);
+                select.innerHTML = '<option value="">Sınav yüklenemedi</option>';
             }
         }
 
@@ -90,28 +424,67 @@
                     '<div class="empty-state">Önce sınav seçin...</div>';
                 document.getElementById('assigned-students').innerHTML =
                     '<div class="empty-state">Henüz atama yapılmadı</div>';
+                document.getElementById('exam-room-info').innerHTML = '';
                 return;
             }
 
+            document.getElementById('available-students').innerHTML =
+                '<div class="empty-state">Yükleniyor...</div>';
+            document.getElementById('assigned-students').innerHTML =
+                '<div class="empty-state">Yükleniyor...</div>';
+
             try {
                 // Load all students
-                const studentsResponse = await API.get(API_CONFIG.ENDPOINTS.STUDENTS.BASE);
+                const studentsResponse = await API.get(API_CONFIG.ENDPOINTS.USERS.STUDENTS);
                 allStudents = await studentsResponse.json();
 
-                // Load assigned students for this exam
-                const assignedResponse = await API.get(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students`);
-                const assignedData = await assignedResponse.json();
-                assignedStudentIds = assignedData.map(s => s.student_id);
+                // Load enrollments for this exam
+                const enrollmentsResponse = await API.get(API_CONFIG.ENDPOINTS.EXAMS.ENROLLMENTS(currentExamId));
+                enrollments = await enrollmentsResponse.json();
+
+                // Load seat info for this exam
+                const seatsResponse = await API.get(API_CONFIG.ENDPOINTS.EXAMS.SEATS(currentExamId));
+                seatData = await seatsResponse.json();
+
+                // Show room info
+                updateRoomInfoBadge();
 
                 renderStudentLists();
             } catch (error) {
                 console.error('Veri yüklenemedi:', error);
+                document.getElementById('available-students').innerHTML =
+                    '<div class="empty-state">Veri yüklenemedi</div>';
+            }
+        }
+
+        function updateRoomInfoBadge() {
+            const infoContainer = document.getElementById('exam-room-info');
+            
+            if (seatData && seatData.has_room) {
+                const occupiedCount = seatData.occupied_count || 0;
+                const capacity = seatData.capacity || (seatData.total_rows * seatData.total_columns);
+                infoContainer.innerHTML = `
+                    <div class="exam-room-badge">
+                        🏫 ${seatData.room_name} 
+                        | ${seatData.total_rows}×${seatData.total_columns} koltuk 
+                        | ${occupiedCount}/${capacity} dolu
+                    </div>
+                `;
+            } else {
+                infoContainer.innerHTML = `
+                    <div class="exam-room-badge no-room">
+                        ⚠️ Bu sınava henüz salon atanmamış
+                    </div>
+                `;
             }
         }
 
         function renderStudentLists() {
             const availableContainer = document.getElementById('available-students');
             const assignedContainer = document.getElementById('assigned-students');
+
+            // Get list of assigned student IDs
+            const assignedStudentIds = enrollments.map(e => e.student_id);
 
             // Available students (not assigned)
             const availableStudents = allStudents.filter(s => !assignedStudentIds.includes(s.student_id));
@@ -120,27 +493,25 @@
                 availableContainer.innerHTML = '<div class="empty-state">Tüm öğrenciler atandı</div>';
             } else {
                 availableContainer.innerHTML = availableStudents.map(student => `
-                    <div class="list-item" onclick="assignStudent('${student.student_id}')">
+                    <div class="list-item" onclick="openSeatModal('${student.student_id}')">
                         <div class="info">
                             <span class="name">${student.full_name}</span>
-                            <span class="meta">${student.student_id}</span>
+                            <span class="meta">${student.student_number}</span>
                         </div>
                         <span style="color: var(--success);">+</span>
                     </div>
                 `).join('');
             }
 
-            // Assigned students
-            const assignedStudents = allStudents.filter(s => assignedStudentIds.includes(s.student_id));
-
-            if (assignedStudents.length === 0) {
+            // Assigned students (from enrollments)
+            if (enrollments.length === 0) {
                 assignedContainer.innerHTML = '<div class="empty-state">Henüz atama yapılmadı</div>';
             } else {
-                assignedContainer.innerHTML = assignedStudents.map(student => `
-                    <div class="list-item" onclick="unassignStudent('${student.student_id}')">
+                assignedContainer.innerHTML = enrollments.map(enrollment => `
+                    <div class="list-item" onclick="unassignStudent('${enrollment.enrollment_id}')">
                         <div class="info">
-                            <span class="name">${student.full_name}</span>
-                            <span class="meta">${student.student_id}</span>
+                            <span class="name">${enrollment.student_name || 'Bilinmiyor'}</span>
+                            <span class="meta">${enrollment.student_number || ''} ${enrollment.seat_label ? '| Koltuk: ' + enrollment.seat_label : '| Koltuk atanmadı'}</span>
                         </div>
                         <span style="color: var(--danger);">×</span>
                     </div>
@@ -148,21 +519,151 @@
             }
         }
 
-        async function assignStudent(studentId) {
+        function openSeatModal(studentId) {
             if (!currentExamId) return;
 
-            try {
-                const response = await API.post(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students`, {
-                    student_id: studentId
+            // Find student
+            selectedStudent = allStudents.find(s => s.student_id === studentId);
+            if (!selectedStudent) return;
+
+            selectedSeat = null;
+            document.getElementById('btn-confirm-seat').disabled = true;
+
+            // Update modal info
+            document.getElementById('modal-student-name').textContent = selectedStudent.full_name;
+            document.getElementById('modal-student-number').textContent = selectedStudent.student_number;
+
+            const wrapper = document.getElementById('seat-grid-wrapper');
+
+            if (!seatData || !seatData.has_room) {
+                // No room assigned
+                wrapper.innerHTML = `
+                    <div class="no-room-warning">
+                        <div class="icon">🚫</div>
+                        <p><strong>Bu sınava salon atanmamış!</strong></p>
+                        <p>Önce sınav düzenlemesinden bir salon atayın veya koltuğu atamadan devam edebilirsiniz.</p>
+                    </div>
+                `;
+                document.getElementById('modal-room-name').textContent = 'Salon yok';
+                document.getElementById('modal-room-size').textContent = '-';
+                
+                // Allow assignment without seat
+                document.getElementById('btn-confirm-seat').disabled = false;
+                document.getElementById('btn-confirm-seat').textContent = 'Koltuğsuz Ata';
+            } else {
+                // Room exists - show seat grid
+                document.getElementById('modal-room-name').textContent = seatData.room_name;
+                document.getElementById('modal-room-size').textContent = `${seatData.total_rows} satır × ${seatData.total_columns} sütun`;
+                document.getElementById('btn-confirm-seat').textContent = 'Koltuğu Ata';
+
+                // Build occupied seats map
+                const occupiedMap = {};
+                seatData.occupied_seats.forEach(s => {
+                    occupiedMap[`${s.row}-${s.col}`] = s;
                 });
 
+                const rows = seatData.total_rows;
+                const cols = seatData.total_columns;
+
+                let gridHtml = `
+                    <div class="seat-grid-container">
+                        <div class="classroom-label">📋 Tahta / Ön Taraf</div>
+                        <div class="seat-grid" style="grid-template-columns: repeat(${cols}, 1fr);">
+                `;
+
+                for (let r = 1; r <= rows; r++) {
+                    for (let c = 1; c <= cols; c++) {
+                        const key = `${r}-${c}`;
+                        const isOccupied = occupiedMap[key];
+                        const seatClass = isOccupied ? 'occupied' : 'available';
+                        const title = isOccupied ? `Dolu: ${occupiedMap[key].student_name}` : `Boş - R${r}C${c}`;
+                        
+                        gridHtml += `
+                            <div class="seat ${seatClass}" 
+                                 data-row="${r}" 
+                                 data-col="${c}"
+                                 title="${title}"
+                                 onclick="selectSeat(this, ${r}, ${c}, ${isOccupied ? 'true' : 'false'})">
+                                ${r}-${c}
+                            </div>
+                        `;
+                    }
+                }
+
+                gridHtml += `
+                        </div>
+                        <div class="seat-legend">
+                            <div class="legend-item">
+                                <div class="legend-color available"></div>
+                                <span>Boş</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color occupied"></div>
+                                <span>Dolu</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color selected"></div>
+                                <span>Seçili</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                wrapper.innerHTML = gridHtml;
+            }
+
+            // Show modal
+            document.getElementById('seat-modal').classList.add('active');
+        }
+
+        function selectSeat(element, row, col, isOccupied) {
+            if (isOccupied) {
+                App.showError('Bu koltuk zaten dolu!');
+                return;
+            }
+
+            // Remove previous selection
+            document.querySelectorAll('.seat.selected').forEach(s => s.classList.remove('selected'));
+
+            // Select this seat
+            element.classList.add('selected');
+            selectedSeat = { row, col };
+
+            // Enable confirm button
+            document.getElementById('btn-confirm-seat').disabled = false;
+        }
+
+        function closeSeatModal() {
+            document.getElementById('seat-modal').classList.remove('active');
+            selectedStudent = null;
+            selectedSeat = null;
+        }
+
+        async function confirmSeatAssignment() {
+            if (!currentExamId || !selectedStudent) return;
+
+            const payload = {
+                exam_id: currentExamId,
+                student_id: selectedStudent.student_id
+            };
+
+            // Add seat info if selected
+            if (selectedSeat) {
+                payload.assigned_row = selectedSeat.row;
+                payload.assigned_col = selectedSeat.col;
+            }
+
+            try {
+                const response = await API.post(API_CONFIG.ENDPOINTS.STUDENT_EXAMS.BASE, payload);
+
                 if (response.ok) {
-                    assignedStudentIds.push(studentId);
-                    renderStudentLists();
-                    App.showSuccess('Öğrenci sınava atandı!');
+                    const seatInfo = selectedSeat ? ` (Koltuk: R${selectedSeat.row}C${selectedSeat.col})` : '';
+                    App.showSuccess(`Öğrenci sınava atandı!${seatInfo}`);
+                    closeSeatModal();
+                    await loadExamData(); // Reload lists
                 } else {
                     const error = await response.json();
-                    App.showError(error.message || 'Atama başarısız oldu.');
+                    App.showError(error.error || 'Atama başarısız oldu.');
                 }
             } catch (error) {
                 console.error('Atama hatası:', error);
@@ -170,19 +671,22 @@
             }
         }
 
-        async function unassignStudent(studentId) {
+        async function unassignStudent(enrollmentId) {
             if (!currentExamId) return;
 
+            if (!confirm('Bu öğrenciyi atamadan çıkarmak istediğinize emin misiniz?')) {
+                return;
+            }
+
             try {
-                const response = await API.delete(`${API_CONFIG.ENDPOINTS.EXAMS.BASE}/${currentExamId}/students/${studentId}`);
+                const response = await API.delete(API_CONFIG.ENDPOINTS.STUDENT_EXAMS.BY_ID(enrollmentId));
 
                 if (response.ok) {
-                    assignedStudentIds = assignedStudentIds.filter(id => id !== studentId);
-                    renderStudentLists();
                     App.showSuccess('Öğrenci atamadan çıkarıldı!');
+                    await loadExamData(); // Reload lists
                 } else {
                     const error = await response.json();
-                    App.showError(error.message || 'İşlem başarısız oldu.');
+                    App.showError(error.error || 'İşlem başarısız oldu.');
                 }
             } catch (error) {
                 console.error('İşlem hatası:', error);

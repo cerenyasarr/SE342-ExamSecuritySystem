@@ -22,21 +22,19 @@
             <form id="exam-form" onsubmit="createExam(event)">
                 <div class="input-group">
                     <label>Sınav Adı</label>
-                    <input type="text" name="exam_name" class="input-control" placeholder="Örn: SE342 Final Sınavı"
+                    <input type="text" name="exam_title" class="input-control" placeholder="Örn: SE342 Final Sınavı"
                         required>
                 </div>
 
                 <div class="input-group">
-                    <label>Ders</label>
-                    <select name="course_id" id="course-select" class="input-control" required>
-                        <option value="">-- Ders Seçin --</option>
-                    </select>
+                    <label>Ders Kodu</label>
+                    <input type="text" name="course_code" class="input-control" placeholder="Örn: SE342" required>
                 </div>
 
                 <div class="input-group">
                     <label>Salon</label>
-                    <select name="room_id" id="room-select" class="input-control" required>
-                        <option value="">-- Salon Seçin --</option>
+                    <select name="room_id" id="room-select" class="input-control">
+                        <option value="">-- Salon Seçin (Opsiyonel) --</option>
                     </select>
                 </div>
 
@@ -73,57 +71,27 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([
-                loadCourses(),
                 loadRooms(),
                 loadExams()
             ]);
         });
 
-        async function loadCourses() {
-            const select = document.getElementById('course-select');
-            try {
-                const response = await API.get(API_CONFIG.ENDPOINTS.COURSES?.BASE || '/api/courses');
-                const courses = await response.json();
-
-                courses.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.id;
-                    option.textContent = `${course.code} - ${course.name}`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Dersler yüklenemedi:', error);
-                // Add some dummy data for demo
-                select.innerHTML = `
-                    <option value="">-- Ders Seçin --</option>
-                    <option value="1">SE342 - Software Engineering</option>
-                    <option value="2">CS101 - Introduction to CS</option>
-                    <option value="3">MATH201 - Calculus II</option>
-                `;
-            }
-        }
-
         async function loadRooms() {
             const select = document.getElementById('room-select');
             try {
-                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms');
+                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS.BASE);
                 const rooms = await response.json();
 
+                select.innerHTML = '<option value="">-- Salon Seçin (Opsiyonel) --</option>';
                 rooms.forEach(room => {
                     const option = document.createElement('option');
-                    option.value = room.id;
-                    option.textContent = `${room.name} (${room.capacity} kişi)`;
+                    option.value = room.room_id;
+                    option.textContent = `${room.room_name} (${room.capacity} kişi)`;
                     select.appendChild(option);
                 });
             } catch (error) {
                 console.error('Salonlar yüklenemedi:', error);
-                // Add some dummy data for demo
-                select.innerHTML = `
-                    <option value="">-- Salon Seçin --</option>
-                    <option value="1">D-101 (50 kişi)</option>
-                    <option value="2">Amfi-A (200 kişi)</option>
-                    <option value="3">D-102 (40 kişi)</option>
-                `;
+                select.innerHTML = '<option value="">Salon yüklenemedi</option>';
             }
         }
 
@@ -137,10 +105,10 @@
                     container.innerHTML = exams.map(exam => `
                         <div class="existing-item">
                             <div class="info">
-                                <span class="title">${exam.name}</span>
-                                <span class="meta">${exam.course_code || 'N/A'} | ${formatDate(exam.start_time)}</span>
+                                <span class="title">${exam.exam_title}</span>
+                                <span class="meta">${exam.course_code} | ${formatDate(exam.start_time)}</span>
                             </div>
-                            <span class="status-badge status-scheduled">${exam.status || 'Scheduled'}</span>
+                            <span class="status-badge status-${exam.status || 'scheduled'}">${translateStatus(exam.status)}</span>
                         </div>
                     `).join('');
                 } else {
@@ -158,6 +126,15 @@
             return date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
         }
 
+        function translateStatus(status) {
+            const statuses = {
+                'scheduled': 'Planlandı',
+                'active': 'Aktif',
+                'completed': 'Tamamlandı'
+            };
+            return statuses[status] || 'Planlandı';
+        }
+
         async function createExam(event) {
             event.preventDefault();
 
@@ -165,9 +142,9 @@
             const formData = new FormData(form);
 
             const examData = {
-                name: formData.get('exam_name'),
-                course_id: formData.get('course_id'),
-                room_id: formData.get('room_id'),
+                exam_title: formData.get('exam_title'),
+                course_code: formData.get('course_code'),
+                room_id: formData.get('room_id') || null,
                 start_time: formData.get('start_time'),
                 end_time: formData.get('end_time')
             };
@@ -181,7 +158,7 @@
                     await loadExams();
                 } else {
                     const error = await response.json();
-                    App.showError(error.message || 'Sınav oluşturulamadı.');
+                    App.showError(error.error || 'Sınav oluşturulamadı.');
                 }
             } catch (error) {
                 console.error('Sınav oluşturma hatası:', error);

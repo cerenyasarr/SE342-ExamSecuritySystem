@@ -44,7 +44,7 @@
                         Salonlar
                     </h4>
                     <div class="room-list" id="room-list">
-                        <!-- Dinamik olarak doldurulacak -->
+                        <div class="empty-state" style="padding: 1rem;">Yükleniyor...</div>
                     </div>
                 </div>
 
@@ -72,19 +72,14 @@
         });
 
         async function loadRooms() {
+            const container = document.getElementById('room-list');
             try {
-                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms');
+                const response = await API.get(API_CONFIG.ENDPOINTS.ROOMS.BASE);
                 rooms = await response.json();
                 renderRoomList();
             } catch (error) {
                 console.error('Salonlar yüklenemedi:', error);
-                // Demo data
-                rooms = [
-                    { id: 1, name: 'D-101', rows: 5, cols: 10, capacity: 50 },
-                    { id: 2, name: 'Amfi-A', rows: 10, cols: 20, capacity: 200 },
-                    { id: 3, name: 'D-102', rows: 4, cols: 10, capacity: 40 }
-                ];
-                renderRoomList();
+                container.innerHTML = '<div class="empty-state" style="padding: 1rem;">Salonlar yüklenemedi</div>';
             }
         }
 
@@ -97,9 +92,9 @@
             }
 
             container.innerHTML = rooms.map(room => `
-                <div class="room-item ${selectedRoomId === room.id ? 'selected' : ''}" onclick="selectRoom(${room.id})">
-                    <div class="room-name">${room.name}</div>
-                    <div class="room-capacity">Kapasite: ${room.capacity || (room.rows * room.cols)} kişi</div>
+                <div class="room-item ${selectedRoomId === room.room_id ? 'selected' : ''}" onclick="selectRoom('${room.room_id}')">
+                    <div class="room-name">${room.room_name}</div>
+                    <div class="room-capacity">Kapasite: ${room.capacity} kişi</div>
                 </div>
             `).join('');
         }
@@ -111,7 +106,7 @@
         }
 
         function renderSeatingGrid(roomId) {
-            const room = rooms.find(r => r.id === roomId);
+            const room = rooms.find(r => r.room_id === roomId);
             if (!room) return;
 
             const placeholder = document.getElementById('seating-placeholder');
@@ -120,8 +115,8 @@
             placeholder.style.display = 'none';
             grid.style.display = 'grid';
 
-            const rows = room.rows || 5;
-            const cols = room.cols || 10;
+            const rows = room.total_rows || 5;
+            const cols = room.total_columns || 6;
 
             grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
@@ -150,14 +145,14 @@
             }
 
             const roomData = {
-                name: name,
-                rows: rows,
-                cols: cols,
+                room_name: name,
+                total_rows: rows,
+                total_columns: cols,
                 capacity: rows * cols
             };
 
             try {
-                const response = await API.post(API_CONFIG.ENDPOINTS.ROOMS?.BASE || '/api/rooms', roomData);
+                const response = await API.post(API_CONFIG.ENDPOINTS.ROOMS.BASE, roomData);
 
                 if (response.ok) {
                     App.showSuccess('Salon başarıyla eklendi!');
@@ -165,19 +160,11 @@
                     await loadRooms();
                 } else {
                     const error = await response.json();
-                    App.showError(error.message || 'Salon eklenemedi.');
+                    App.showError(error.error || 'Salon eklenemedi.');
                 }
             } catch (error) {
                 console.error('Salon ekleme hatası:', error);
-                // Demo mode - add locally
-                const newRoom = {
-                    id: rooms.length + 1,
-                    ...roomData
-                };
-                rooms.push(newRoom);
-                renderRoomList();
-                App.showSuccess('Salon eklendi (demo mod)');
-                document.getElementById('room-name').value = '';
+                App.showError('Sunucu bağlantı hatası.');
             }
         }
     </script>

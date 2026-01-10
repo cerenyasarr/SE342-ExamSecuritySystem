@@ -113,17 +113,18 @@
             grid.style.display = 'none';
             
             try {
-                const students = await App.loadSeatingGrid(currentExamId, 'seating-grid');
+                const enrollments = await App.loadSeatingGrid(currentExamId, 'seating-grid');
                 loading.style.display = 'none';
                 grid.style.display = 'grid';
                 stats.style.display = 'block';
                 
-                // Update stats
-                const assigned = students.filter(s => s.seat_number).length;
+                // Update stats - count enrollments with assigned seats
+                const assigned = enrollments.filter(e => e.assigned_row && e.assigned_col).length;
+                const total = enrollments.length;
                 document.getElementById('stat-assigned').textContent = assigned;
-                document.getElementById('stat-empty').textContent = 50 - assigned;
+                document.getElementById('stat-empty').textContent = total - assigned;
             } catch (error) {
-                loading.textContent = 'Error loading seating plan.';
+                loading.textContent = 'Koltuk düzeni yüklenemedi.';
             }
         }
         

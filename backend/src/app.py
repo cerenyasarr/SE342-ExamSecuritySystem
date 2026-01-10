@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from src.config import config
@@ -23,7 +23,28 @@ def create_app(config_name='development'):
     # Initialize extensions
     db.init_app(app)
     CORS(app, origins=['*'])
-    JWTManager(app)
+    jwt = JWTManager(app)
+    
+    # JWT Error Handlers for debugging
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        print(f"[JWT DEBUG] Invalid token: {error_string}")
+        return jsonify({'error': f'Invalid token: {error_string}'}), 422
+    
+    @jwt.unauthorized_loader
+    def missing_token_callback(error_string):
+        print(f"[JWT DEBUG] Missing token: {error_string}")
+        return jsonify({'error': f'Missing authorization header: {error_string}'}), 401
+    
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        print(f"[JWT DEBUG] Expired token - Header: {jwt_header}, Payload: {jwt_payload}")
+        return jsonify({'error': 'Token has expired'}), 401
+    
+    @jwt.token_verification_failed_loader
+    def token_verification_failed_callback(jwt_header, jwt_payload):
+        print(f"[JWT DEBUG] Verification failed - Header: {jwt_header}, Payload: {jwt_payload}")
+        return jsonify({'error': 'Token verification failed'}), 422
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')

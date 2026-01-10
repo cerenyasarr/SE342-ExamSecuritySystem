@@ -22,17 +22,26 @@
             <form id="student-form" onsubmit="registerStudent(event)">
                 <div class="input-group">
                     <label>Öğrenci Numarası</label>
-                    <input type="text" name="student_id" class="input-control" placeholder="Örn: 20190001" required>
+                    <input type="text" name="student_number" id="student_number" class="input-control" 
+                        placeholder="Örn: 220706028" required
+                        pattern="[0-9]{9}" title="9 haneli öğrenci numarası girin">
                 </div>
 
                 <div class="input-group">
                     <label>Ad Soyad</label>
-                    <input type="text" name="full_name" class="input-control" placeholder="Örn: Ahmet Yılmaz" required>
+                    <input type="text" name="full_name" id="full_name" class="input-control" 
+                        placeholder="Örn: Ahmet Yılmaz" required>
                 </div>
 
                 <div class="input-group">
-                    <label>Şifre</label>
-                    <input type="password" name="password" class="input-control" placeholder="••••••••" required>
+                    <label>E-posta</label>
+                    <input type="email" name="email" id="email" class="input-control" 
+                        placeholder="ornek@email.com" required
+                        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                        title="Geçerli bir e-posta adresi girin">
+                    <small style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                        Geçerli bir e-posta adresi girin (örn: isim@domain.com)
+                    </small>
                 </div>
 
                 <div class="camera-section">
@@ -64,6 +73,21 @@
     <script>
         let stream = null;
         let capturedPhoto = null;
+
+        // Email validation regex
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        // Real-time email validation
+        document.getElementById('email').addEventListener('input', function(e) {
+            const email = e.target.value;
+            if (email && !emailRegex.test(email)) {
+                e.target.setCustomValidity('Geçerli bir e-posta adresi girin');
+                e.target.style.borderColor = 'var(--danger)';
+            } else {
+                e.target.setCustomValidity('');
+                e.target.style.borderColor = '';
+            }
+        });
 
         async function openCamera() {
             try {
@@ -119,22 +143,30 @@
             event.preventDefault();
 
             const form = event.target;
-            const formData = new FormData(form);
+            const studentNumber = document.getElementById('student_number').value.trim();
+            const fullName = document.getElementById('full_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            // Validate email
+            if (!emailRegex.test(email)) {
+                App.showError('Lütfen geçerli bir e-posta adresi girin.');
+                return;
+            }
 
             if (!capturedPhoto) {
-                alert('Lütfen önce bir fotoğraf çekin.');
+                App.showError('Lütfen önce bir fotoğraf çekin.');
                 return;
             }
 
             const studentData = {
-                student_id: formData.get('student_id'),
-                full_name: formData.get('full_name'),
-                password: formData.get('password'),
-                reference_photo: capturedPhoto
+                student_number: studentNumber,
+                full_name: fullName,
+                email: email,
+                reference_image_path: capturedPhoto  // Backend will save this
             };
 
             try {
-                const response = await API.post(API_CONFIG.ENDPOINTS.STUDENTS.BASE, studentData);
+                const response = await API.post(API_CONFIG.ENDPOINTS.USERS.STUDENTS, studentData);
 
                 if (response.ok) {
                     App.showSuccess('Öğrenci başarıyla kaydedildi!');
@@ -144,7 +176,7 @@
                     capturedPhoto = null;
                 } else {
                     const error = await response.json();
-                    App.showError(error.message || 'Kayıt başarısız oldu.');
+                    App.showError(error.error || 'Kayıt başarısız oldu.');
                 }
             } catch (error) {
                 console.error('Kayıt hatası:', error);

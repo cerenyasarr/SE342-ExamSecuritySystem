@@ -211,66 +211,8 @@
                         Öğrenci Listesi
                     </h4>
                     <div class="student-list" id="student-list">
-                        <!-- Demo students -->
-                        <div class="student-item" onclick="selectStudent(this, 1, 'Zeynep Kaya', 'A2')">
-                            <div class="student-avatar avatar-z">Z</div>
-                            <div class="student-info">
-                                <div class="student-name">Zeynep Kaya</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">A2</span>
-                                    <span class="status-badge-small status-waiting">Bekliyor</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="student-item" onclick="selectStudent(this, 2, 'Burak Demir', 'A3')">
-                            <div class="student-avatar avatar-b">B</div>
-                            <div class="student-info">
-                                <div class="student-name">Burak Demir</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">A3</span>
-                                    <span class="status-badge-small status-waiting">Bekliyor</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="student-item" onclick="selectStudent(this, 3, 'Elif Yıldız', 'B1')">
-                            <div class="student-avatar avatar-e">E</div>
-                            <div class="student-info">
-                                <div class="student-name">Elif Yıldız</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">B1</span>
-                                    <span class="status-badge-small status-waiting">Bekliyor</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="student-item" onclick="selectStudent(this, 4, 'Can Arslan', 'B2')">
-                            <div class="student-avatar avatar-c">C</div>
-                            <div class="student-info">
-                                <div class="student-name">Can Arslan</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">B2</span>
-                                    <span class="status-badge-small status-waiting">Bekliyor</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="student-item" onclick="selectStudent(this, 5, 'Ali Öztürk', 'A1')">
-                            <div class="student-avatar avatar-a">A</div>
-                            <div class="student-info">
-                                <div class="student-name">Ali Öztürk</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">A1</span>
-                                    <span class="status-badge-small status-waiting">Bekliyor</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="student-item selected" onclick="selectStudent(this, 6, 'Bilal Çifteci', 'A3')">
-                            <div class="student-avatar avatar-b">B</div>
-                            <div class="student-info">
-                                <div class="student-name">Bilal Çifteci</div>
-                                <div class="student-meta">
-                                    <span class="seat-badge">A3</span>
-                                    <span class="status-badge-small status-done">✓ Onaylı</span>
-                                </div>
-                            </div>
+                        <div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">
+                            Önce sınav seçin...
                         </div>
                     </div>
                 </div>
@@ -317,48 +259,61 @@
                 select.innerHTML = '<option value="">-- Sınav Seçin --</option>';
                 exams.forEach(exam => {
                     const option = document.createElement('option');
-                    option.value = exam.id || exam.exam_id;
-                    option.textContent = exam.name || exam.exam_title;
+                    option.value = exam.exam_id;
+                    option.textContent = `${exam.exam_title} - ${exam.course_code}`;
                     select.appendChild(option);
                 });
             } catch (error) {
-                console.log('Using demo exams');
-                select.innerHTML = `
-                    <option value="">-- Sınav Seçin --</option>
-                    <option value="1" selected>SE342 Final Exam</option>
-                `;
+                console.error('Sınavlar yüklenemedi:', error);
+                select.innerHTML = '<option value="">Sınav yüklenemedi</option>';
             }
         }
 
         async function loadExamStudents() {
             currentExamId = document.getElementById('exam-select').value;
-            if (!currentExamId) return;
+            const container = document.getElementById('student-list');
+            
+            if (!currentExamId) {
+                container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Önce sınav seçin...</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Yükleniyor...</div>';
 
             try {
                 const response = await API.get(API_CONFIG.ENDPOINTS.EXAMS.ENROLLMENTS(currentExamId));
-                const students = await response.json();
-                renderStudentList(students);
+                const enrollments = await response.json();
+                
+                if (enrollments.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Bu sınava kayıtlı öğrenci yok</div>';
+                } else {
+                    renderStudentList(enrollments);
+                }
             } catch (error) {
-                console.log('Using demo students');
+                console.error('Öğrenciler yüklenemedi:', error);
+                container.innerHTML = '<div class="empty-state" style="padding: 1rem; color: var(--text-dim); text-align: center;">Öğrenciler yüklenemedi</div>';
             }
         }
 
-        function renderStudentList(students) {
+        function renderStudentList(enrollments) {
             const container = document.getElementById('student-list');
             const avatarClasses = ['avatar-z', 'avatar-b', 'avatar-e', 'avatar-c', 'avatar-a'];
 
-            container.innerHTML = students.map((s, i) => {
-                const initial = (s.student_name || s.full_name || 'U')[0].toUpperCase();
+            container.innerHTML = enrollments.map((e, i) => {
+                const name = e.student_name || 'Bilinmiyor';
+                const initial = name[0].toUpperCase();
                 const avatarClass = avatarClasses[i % avatarClasses.length];
-                const isVerified = s.status === 'attended' || s.verification_status === 'success';
+                const isVerified = e.status === 'attended';
+                const studentId = e.student_id;
+                const seatLabel = e.seat_label || '-';
 
                 return `
-                    <div class="student-item ${isVerified ? 'verified' : ''}" onclick="selectStudent(this, ${s.id}, '${s.student_name || s.full_name}', '${s.seat_label || '-'}')">
+                    <div class="student-item ${isVerified ? 'verified' : ''}" onclick="selectStudent(this, '${studentId}', '${name}', '${seatLabel}')">
                         <div class="student-avatar ${avatarClass}">${initial}</div>
                         <div class="student-info">
-                            <div class="student-name">${s.student_name || s.full_name}</div>
+                            <div class="student-name">${name}</div>
                             <div class="student-meta">
-                                <span class="seat-badge">${s.seat_label || '-'}</span>
+                                <span class="seat-badge">${seatLabel}</span>
                                 <span class="status-badge-small ${isVerified ? 'status-done' : 'status-waiting'}">
                                     ${isVerified ? '✓ Onaylı' : 'Bekliyor'}
                                 </span>
@@ -401,34 +356,77 @@
                 return;
             }
 
-            App.showSuccess(`${selectedStudentName} yüz doğrulaması başarılı!`);
-
-            // Update UI
-            const selectedItem = document.querySelector('.student-item.selected');
-            if (selectedItem) {
-                selectedItem.classList.add('verified');
-                const statusBadge = selectedItem.querySelector('.status-badge-small');
-                if (statusBadge) {
-                    statusBadge.className = 'status-badge-small status-done';
-                    statusBadge.textContent = '✓ Onaylı';
-                }
+            if (!currentExamId) {
+                App.showError('Lütfen önce bir sınav seçin');
+                return;
             }
 
-            // API call
+            const video = document.getElementById('video');
+            if (!video.srcObject) {
+                App.showError('Lütfen önce kamerayı açın');
+                return;
+            }
+
+            // Capture photo from video
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            const capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Show loading state
+            App.showSuccess('Yüz doğrulanıyor...');
+
             try {
-                await App.processCheckin(selectedStudentId, currentExamId);
+                const response = await API.post(API_CONFIG.ENDPOINTS.STUDENT_EXAMS.VERIFY_FACE, {
+                    student_id: selectedStudentId,
+                    exam_id: currentExamId,
+                    captured_image: capturedImage
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.verified) {
+                        // Success - face matched!
+                        App.showSuccess(`✓ ${result.student_name} doğrulandı! (Güven: %${Math.round(result.confidence * 100)})`);
+                        
+                        // Update UI
+                        const selectedItem = document.querySelector('.student-item.selected');
+                        if (selectedItem) {
+                            selectedItem.classList.add('verified');
+                            const statusBadge = selectedItem.querySelector('.status-badge-small');
+                            if (statusBadge) {
+                                statusBadge.className = 'status-badge-small status-done';
+                                statusBadge.textContent = '✓ Onaylı';
+                            }
+                        }
+                    } else {
+                        // Face did not match
+                        App.showError(`✗ ${result.student_name} yüz eşleşmedi! (Güven: %${Math.round(result.confidence * 100)})`);
+                        
+                        // Update UI to show mismatch
+                        const selectedItem = document.querySelector('.student-item.selected');
+                        if (selectedItem) {
+                            const statusBadge = selectedItem.querySelector('.status-badge-small');
+                            if (statusBadge) {
+                                statusBadge.className = 'status-badge-small status-error';
+                                statusBadge.textContent = '✗ Eşleşmedi';
+                            }
+                        }
+                    }
+                } else {
+                    App.showError(result.error || 'Doğrulama başarısız');
+                }
             } catch (error) {
-                console.log('Demo mode');
+                console.error('Verification error:', error);
+                App.showError('Sunucu bağlantı hatası');
             }
         }
 
         function simulateError() {
-            if (!selectedStudentId) {
-                App.showError('Lütfen önce bir öğrenci seçin');
-                return;
-            }
-
-            App.showError(`${selectedStudentName} yüz doğrulaması başarısız!`);
+            App.showError('Bu buton artık kullanılmıyor. Gerçek yüz doğrulama aktif.');
         }
     </script>
 </body>

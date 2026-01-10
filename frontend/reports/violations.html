@@ -95,52 +95,18 @@
 
         <div class="glass-card static" style="max-width: 900px; margin: 0 auto;">
             <!-- Filter Buttons -->
-            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                 <button class="filter-btn active" onclick="filterViolations('all', this)">Tümü</button>
                 <button class="filter-btn" onclick="filterViolations('face_mismatch', this)">Yüz Hatası</button>
                 <button class="filter-btn" onclick="filterViolations('wrong_seat', this)">Koltuk Hatası</button>
+                <button class="filter-btn" onclick="filterViolations('phone_detected', this)">Telefon</button>
+                <button class="filter-btn" onclick="filterViolations('talking', this)">Konuşma</button>
             </div>
 
             <!-- Violations List -->
             <div id="violations-container">
-                <!-- Demo violations -->
-                <div class="violation-card" data-type="face_mismatch">
-                    <div class="left-side">
-                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
-                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
-                        <div class="description">Face verification failed (confidence: 0.58)</div>
-                        <button class="btn-detail">Detay Gör</button>
-                    </div>
-                    <div class="right-side">
-                        <div class="date">09.01.2026 12:55:03</div>
-                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
-                    </div>
-                </div>
-
-                <div class="violation-card" data-type="face_mismatch">
-                    <div class="left-side">
-                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
-                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
-                        <div class="description">Face verification failed (confidence: 0.58)</div>
-                        <button class="btn-detail">Detay Gör</button>
-                    </div>
-                    <div class="right-side">
-                        <div class="date">09.01.2026 12:53:02</div>
-                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
-                    </div>
-                </div>
-
-                <div class="violation-card" data-type="face_mismatch">
-                    <div class="left-side">
-                        <div class="title">YÜZ UYUŞMAZLIĞI - KRİTİK</div>
-                        <div class="student-info"><strong>Öğrenci:</strong> Bilal Çifteci</div>
-                        <div class="description">Face verification failed (confidence: 0.00)</div>
-                        <button class="btn-detail">Detay Gör</button>
-                    </div>
-                    <div class="right-side">
-                        <div class="date">09.01.2026 12:52:48</div>
-                        <div class="status">Durum: <span style="color: #f59e0b;">Pending Review</span></div>
-                    </div>
+                <div class="empty-state" style="padding: 2rem; text-align: center; color: var(--text-dim);">
+                    Yükleniyor...
                 </div>
             </div>
         </div>
@@ -156,12 +122,20 @@
         });
 
         async function loadViolations() {
+            const container = document.getElementById('violations-container');
+            
             try {
                 const response = await API.get(API_CONFIG.ENDPOINTS.VIOLATIONS.BASE);
                 allViolations = await response.json();
-                renderViolations(allViolations);
+                
+                if (allViolations && allViolations.length > 0) {
+                    renderViolations(allViolations);
+                } else {
+                    container.innerHTML = '<div class="empty-state" style="padding: 2rem; text-align: center; color: var(--text-dim);">Henüz ihlal kaydı yok</div>';
+                }
             } catch (error) {
-                console.log('Using demo data');
+                console.error('İhlaller yüklenemedi:', error);
+                container.innerHTML = '<div class="empty-state" style="padding: 2rem; text-align: center; color: var(--text-dim);">İhlaller yüklenemedi</div>';
             }
         }
 
@@ -171,31 +145,32 @@
             btn.classList.add('active');
 
             // Filter cards
-            const cards = document.querySelectorAll('.violation-card');
-            cards.forEach(card => {
-                if (type === 'all' || card.dataset.type === type) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            if (type === 'all') {
+                renderViolations(allViolations);
+            } else {
+                const filtered = allViolations.filter(v => v.violation_type === type);
+                renderViolations(filtered);
+            }
         }
 
         function renderViolations(violations) {
-            if (!violations || violations.length === 0) return;
-
             const container = document.getElementById('violations-container');
+            
+            if (!violations || violations.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 2rem; text-align: center; color: var(--text-dim);">Bu filtrede ihlal bulunamadı</div>';
+                return;
+            }
+
             container.innerHTML = violations.map(v => `
                 <div class="violation-card" data-type="${v.violation_type}">
                     <div class="left-side">
                         <div class="title">${formatType(v.violation_type)} - KRİTİK</div>
                         <div class="student-info"><strong>Öğrenci:</strong> ${v.student_name || 'Bilinmiyor'}</div>
-                        <div class="description">${v.description || 'Face verification failed'}</div>
-                        <button class="btn-detail">Detay Gör</button>
+                        <div class="description">${v.description || 'Açıklama yok'}</div>
+                        <button class="btn-detail" onclick="showDetail('${v.violation_id}')">Detay Gör</button>
                     </div>
                     <div class="right-side">
-                        <div class="date">${formatDate(v.detected_at)}</div>
-                        <div class="status">Durum: <span style="color: #f59e0b;">${translateStatus(v.status)}</span></div>
+                        <div class="date">${formatDate(v.reported_at)}</div>
                     </div>
                 </div>
             `).join('');
@@ -207,24 +182,25 @@
                 'wrong_seat': 'KOLTUK HATASI',
                 'phone_detected': 'TELEFON TESPİT EDİLDİ',
                 'talking': 'KONUŞMA',
-                'unauthorized_material': 'YASAK MATERYAL'
+                'looking_around': 'ETRAF İZLEME',
+                'unauthorized_material': 'YASAK MATERYAL',
+                'absence': 'DEVAMSIZLIK',
+                'other': 'DİĞER'
             };
             return types[type] || type?.toUpperCase() || 'İHLAL';
-        }
-
-        function translateStatus(status) {
-            const statuses = {
-                'Pending': 'Pending Review',
-                'Confirmed': 'Onaylandı',
-                'Resolved': 'Çözüldü'
-            };
-            return statuses[status] || 'Pending Review';
         }
 
         function formatDate(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR');
+        }
+
+        function showDetail(violationId) {
+            const violation = allViolations.find(v => v.violation_id === violationId);
+            if (violation) {
+                alert(`İhlal Detayı:\n\nTür: ${formatType(violation.violation_type)}\nÖğrenci: ${violation.student_name || 'Bilinmiyor'}\nAçıklama: ${violation.description || 'Yok'}\nTarih: ${formatDate(violation.reported_at)}`);
+            }
         }
     </script>
 </body>
