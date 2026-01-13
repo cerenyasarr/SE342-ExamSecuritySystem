@@ -12,6 +12,14 @@ A comprehensive Exam Security System featuring face recognition check-in, automa
 
 🔗 **[https://se342-examsecuritysystem-4.onrender.com/login.html](https://se342-examsecuritysystem-4.onrender.com/login.html)**
 
+## Admin Login Credentials:
+Username: emre_admin
+Password: emre_admin
+
+## Invigilator (Proctor) Login Credentials:
+Username: gozetmen_ahmet
+Password: gozetmen_ahmet
+
 ---
 
 ## 🛠️ Tech Stack
